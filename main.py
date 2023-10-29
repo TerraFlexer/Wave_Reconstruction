@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import finit_module as fmd
 from method import method_v
 
-N = 16
+N = 32
 Edge = np.pi
 
 
@@ -96,6 +96,16 @@ def cut_zeros(z, pnt=4):
     return z[pnt: sz - pnt, pnt: sz - pnt]
 
 
+def continue_even(z):
+    cnt = np.shape(z)[0] * 2
+    z4 = np.zeros((cnt, cnt))
+    z4[:cnt // 2, :cnt // 2] = z
+    z4[:cnt // 2, cnt // 2:] = np.flip(z, 1)
+    z4[cnt // 2:, :cnt // 2] = np.flip(z, 0)
+    z4[cnt // 2:, cnt // 2:] = np.flip(z)
+    return z4
+
+
 def gauss(x, y):
     z = np.sin(x)
     return z
@@ -109,10 +119,13 @@ z = spiral(3, 1, X, Y)
 
 # fm = add_noise(z, 0.02)
 fm = z * fmd.beta_1(X, Y)
+fm = continue_even(fm)
+x = np.linspace(-Edge, Edge, 2 * N, endpoint=False)
+y = np.linspace(-Edge, Edge, 2 * N, endpoint=False)
+Y2, X2 = np.meshgrid(x, y)
+fm = np.roll(fm, N // 2, (0, 1)) * fmd.beta_0(X2, Y2)
 
-fm = np.tile(fm, (3, 3))
-
-z_approx = method_v(fm, 3 * N, np.pi, 0)
+z_approx = method_v(fm, 2 * N, np.pi, 0)
 z_approx1 = method_v(z * fmd.beta_0(X, Y), N, np.pi, 0)
 
 spiral_flag = 1
@@ -121,11 +134,12 @@ offs = (np.average(z_approx[0, :]) + np.average(z_approx[N - 1, :]) +
         np.average(z_approx[:, 0]) + np.average(z_approx[:, N - 1])) / 4
 offs *= (1 - spiral_flag)
 
-x = np.linspace(-Edge, Edge, 3 * N, endpoint=False)
-y = np.linspace(-Edge, Edge, 3 * N, endpoint=False)
+x = np.linspace(-Edge, Edge, 2 * N, endpoint=False)
+y = np.linspace(-Edge, Edge, 2 * N, endpoint=False)
 Yv, Xv = np.meshgrid(x, y)
-zv = fm[N:2 * N, N:2 * N]
-z2v = (z_approx - offs)[N:2 * N, N:2 * N]
+zv = np.roll(fm, -N // 2, (0, 1))[:N, :N]
+z_a = np.roll(z_approx, -N // 2, (0, 1))[:N, :N]
+z2v = (z_a - offs)
 
 fig = plt.figure()
 ax = fig.add_subplot(121, projection='3d')
@@ -138,10 +152,6 @@ ax.view_init(45, 60)
 ax = fig.add_subplot(122, projection='3d')
 surf2 = ax.plot_surface(X, Y, (z_approx1 - offs), cmap='plasma')
 ax.set_title('Method approximation')
-'''ax.set_title('Method approximation\nMSE:' + str(mse(z, z_approx - offs)) +
-             '\nDSSIM:' + str((1 - ssim(z, z_approx - offs,
-                                        data_range=max(np.max(fm), np.max(z_approx - offs)) -
-                                                   min(np.min(fm), np.min(z_approx - offs)))) / 2))'''
 # ax.set_zlim([0, np.max((z_approx - offs))])
 ax.view_init(45, 60)
 # fig.colorbar(surf2, location='bottom', shrink=0.6, aspect=7)
@@ -158,6 +168,38 @@ def prepare_for_visual(X1, Y1, Z1):
 
     return Z2
 
+
+fig = plt.figure()
+ax = fig.add_subplot(121, projection='3d')
+surf5 = ax.plot_surface(X2, Y2, fm, cmap='plasma')
+ax.set_title('Original function')
+# ax.set_zlim([0, np.max(fm)])
+ax.view_init(45, 60)
+# fig.colorbar(surf1, location='bottom', shrink=0.6, aspect=7)
+
+ax = fig.add_subplot(122, projection='3d')
+surf6 = ax.plot_surface(X2, Y2, z_approx, cmap='plasma')
+ax.set_title('Method approximation')
+# ax.set_zlim([0, np.max((z_approx - offs))])
+ax.view_init(45, 60)
+# fig.colorbar(surf2, location='bottom', shrink=0.6, aspect=7)
+plt.show()
+
+fig = plt.figure()
+ax = fig.add_subplot(121, projection='3d')
+surf7 = ax.plot_surface(X, Y, fmd.beta_0(X, Y), cmap='plasma')
+ax.set_title('beta_0')
+# ax.set_zlim([0, np.max(fm)])
+ax.view_init(45, 60)
+# fig.colorbar(surf1, location='bottom', shrink=0.6, aspect=7)
+
+ax = fig.add_subplot(122, projection='3d')
+surf8 = ax.plot_surface(X, Y, fmd.beta_1(X, Y), cmap='plasma')
+ax.set_title('beta_1')
+# ax.set_zlim([0, np.max((z_approx - offs))])
+ax.view_init(45, 60)
+# fig.colorbar(surf2, location='bottom', shrink=0.6, aspect=7)
+plt.show()
 
 fig = plt.figure()
 ax = fig.add_subplot(121, projection='3d')
