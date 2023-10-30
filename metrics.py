@@ -19,10 +19,18 @@ for ind, el in enumerate(np.linspace(0.01, 0.2, num=40)):
     ssim_avg = 0
     ssim_avg_stb = 0
     for i in range(5):
+        # Инициализируем сетку
         x = np.linspace(-Edge, Edge, N, endpoint=False)
         y = np.linspace(-Edge, Edge, N, endpoint=False)
         Y, X = np.meshgrid(x, y)
-        z = spiral(3, 1, X, Y)
+
+        # Считаем исходную спиральную функцию
+        z_src = spiral(3, 1, X, Y)
+
+        # Добавляем шум к исходному фронту
+        z = add_noise(z_src, el, N)
+
+        # Инициализируем расширение для одного из кусков
         fm = z * fmd.beta_1(X, Y)
         fm = continue_even(fm)
         x = np.linspace(-Edge, Edge, 2 * N, endpoint=False)
@@ -30,15 +38,18 @@ for ind, el in enumerate(np.linspace(0.01, 0.2, num=40)):
         Y2, X2 = np.meshgrid(x, y)
         fm = np.roll(fm, N // 2, (0, 1)) * fmd.beta_0(X2, Y2)
 
+        # Вычисляем прогоны метода для каждого из двух кусков
         z_approx = method_v(fm, 2 * N, np.pi, 0)
         z_approx1 = method_v(z * fmd.beta_0(X, Y), N, np.pi, 0)
+
+        # Обрезаем расширенный кусок
         z_approx = np.roll(z_approx, -N // 2, (0, 1))[:N, :N]
 
-        z = add_noise(z, el, N)
-        fm = add_noise(fm, el, N * 2)
-
+        # Вычисляем прогоны метода для каждого из двух кусков со стабилизатором
         z_approx_stb = method_v(fm, 2 * N, np.pi, 1)
         z_approx1_stb = method_v(z * fmd.beta_0(X, Y), N, np.pi, 1)
+
+        # Обрезаем расширенный кусок
         z_approx_stb = np.roll(z_approx_stb, -N // 2, (0, 1))[:N, :N]
 
         u_res = z_approx + z_approx1
@@ -48,23 +59,55 @@ for ind, el in enumerate(np.linspace(0.01, 0.2, num=40)):
         z_approx_stb = spline_approximation(u_res_stb.real, X, Y, N)
 
         # offs = (np.average(z_approx[0, :]) + np.average(z_approx[N - 1, :]) +
-                # np.average(z_approx[:, 0]) + np.average(z_approx[:, N - 1])) / 4
+        # np.average(z_approx[:, 0]) + np.average(z_approx[:, N - 1])) / 4
 
         # offs_stb = (np.average(z_approx_stb[0, :]) + np.average(z_approx_stb[N - 1, :]) +
-                    # np.average(z_approx_stb[:, 0]) + np.average(z_approx_stb[:, N - 1])) / 4
+        # np.average(z_approx_stb[:, 0]) + np.average(z_approx_stb[:, N - 1])) / 4
 
-        offs = np.max(z_approx) - np.max(z)
-        offs_stb = np.max(z_approx_stb) - np.max(z)
+        '''fig = plt.figure()
+        ax = fig.add_subplot(121, projection='3d')
+        surf5 = ax.plot_surface(X, Y, z, cmap='plasma')
+        ax.set_title('Original function')
+        # ax.set_zlim([0, np.max(fm)])
+        ax.view_init(45, 60)
+        # fig.colorbar(surf1, location='bottom', shrink=0.6, aspect=7)
 
-        mse_avg += mse(z, z_approx - offs)
-        mse_avg_stb += mse(z, z_approx_stb - offs_stb)
+        ax = fig.add_subplot(122, projection='3d')
+        surf6 = ax.plot_surface(X, Y, z_approx, cmap='plasma')
+        ax.set_title('Method approximation')
+        # ax.set_zlim([0, np.max((z_approx - offs))])
+        ax.view_init(45, 60)
+        # fig.colorbar(surf2, location='bottom', shrink=0.6, aspect=7)
+        plt.show()'''
 
-        ssim_avg += (1 - ssim(z, z_approx - offs,
-                              data_range=max(np.max(z), np.max(z_approx - offs)) -
-                                         min(np.min(z), np.min(z_approx - offs)))) / 2
-        ssim_avg_stb += (1 - ssim(z, z_approx_stb - offs_stb,
-                                  data_range=max(np.max(z), np.max(z_approx_stb - offs_stb)) -
-                                             min(np.min(z), np.min(z_approx_stb - offs_stb)))) / 2
+        offs = np.min(z_approx) - np.min(z_src)
+        offs_stb = np.min(z_approx_stb) - np.min(z_src)
+
+        '''fig = plt.figure()
+        ax = fig.add_subplot(121, projection='3d')
+        surf5 = ax.plot_surface(X, Y, z, cmap='plasma')
+        ax.set_title('Original function')
+        # ax.set_zlim([0, np.max(fm)])
+        ax.view_init(45, 60)
+        # fig.colorbar(surf1, location='bottom', shrink=0.6, aspect=7)
+
+        ax = fig.add_subplot(122, projection='3d')
+        surf6 = ax.plot_surface(X, Y, z_approx - offs, cmap='plasma')
+        ax.set_title('Method approximation')
+        # ax.set_zlim([0, np.max((z_approx - offs))])
+        ax.view_init(45, 60)
+        # fig.colorbar(surf2, location='bottom', shrink=0.6, aspect=7)
+        plt.show()'''
+
+        mse_avg += mse(z_src, z_approx - offs)
+        mse_avg_stb += mse(z_src, z_approx_stb - offs_stb)
+
+        ssim_avg += (1 - ssim(z_src, z_approx - offs,
+                              data_range=max(np.max(z_src), np.max(z_approx - offs)) -
+                                         min(np.min(z_src), np.min(z_approx - offs)))) / 2
+        ssim_avg_stb += (1 - ssim(z_src, z_approx_stb - offs_stb,
+                                  data_range=max(np.max(z_src), np.max(z_approx_stb - offs_stb)) -
+                                             min(np.min(z_src), np.min(z_approx_stb - offs_stb)))) / 2
 
     arr_perc[ind] = el
 

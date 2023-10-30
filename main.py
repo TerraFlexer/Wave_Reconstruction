@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import finit_module as fmd
 from method import method_v
 
-N = 48
+N = 24
 Edge = np.pi
 
 
@@ -232,10 +232,6 @@ ax.view_init(45, 60)
 ax = fig.add_subplot(122, projection='3d')
 surf6 = ax.plot_surface(X, Y, -prepare_for_visual(X, Y, z2v + z_approx1), cmap='plasma')
 ax.set_title('Method approximation')
-'''ax.set_title('Method approximation\nMSE:' + str(mse(z, z_approx - offs)) +
-             '\nDSSIM:' + str((1 - ssim(z, z_approx - offs,
-                                        data_range=max(np.max(fm), np.max(z_approx - offs)) -
-                                                   min(np.min(fm), np.min(z_approx - offs)))) / 2))'''
 # ax.set_zlim([0, np.max((z_approx - offs))])
 ax.view_init(45, 60)
 # fig.colorbar(surf2, location='bottom', shrink=0.6, aspect=7)
