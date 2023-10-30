@@ -1,54 +1,70 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from main import z, X, Y, N, B1, B2, G1, G2, z4
 from skimage.metrics import structural_similarity as ssim
 from skimage.metrics import mean_squared_error as mse
-from main import add_noise, method_count, affect_rows, fx, fy
+from main import add_noise, spiral, continue_even, Edge, N
+from method import method_v
 from splines import spline_approximation, spline_coefficients
+import finit_module as fmd
 
-arr_perc = np.zeros(50)
-arr_mse = np.zeros(50)
-arr_ssim = np.zeros(50)
-arr_mse_stb = np.zeros(50)
-arr_ssim_stb = np.zeros(50)
+arr_perc = np.zeros(40)
+arr_mse = np.zeros(40)
+arr_ssim = np.zeros(40)
+arr_mse_stb = np.zeros(40)
+arr_ssim_stb = np.zeros(40)
 
-for ind, el in enumerate(np.linspace(0.01, 0.2, num=50)):
+for ind, el in enumerate(np.linspace(0.01, 0.2, num=40)):
     mse_avg = 0
     mse_avg_stb = 0
     ssim_avg = 0
     ssim_avg_stb = 0
     for i in range(5):
-        fmi = add_noise(z4, el)
+        x = np.linspace(-Edge, Edge, N, endpoint=False)
+        y = np.linspace(-Edge, Edge, N, endpoint=False)
+        Y, X = np.meshgrid(x, y)
+        z = spiral(3, 1, X, Y)
+        fm = z * fmd.beta_1(X, Y)
+        fm = continue_even(fm)
+        x = np.linspace(-Edge, Edge, 2 * N, endpoint=False)
+        y = np.linspace(-Edge, Edge, 2 * N, endpoint=False)
+        Y2, X2 = np.meshgrid(x, y)
+        fm = np.roll(fm, N // 2, (0, 1)) * fmd.beta_0(X2, Y2)
 
-        g1 = spline_coefficients(fx(fmi), N, X, Y)
-        g2 = spline_coefficients(fy(fmi), N, X, Y)
+        z_approx = method_v(fm, 2 * N, np.pi, 0)
+        z_approx1 = method_v(z * fmd.beta_0(X, Y), N, np.pi, 0)
+        z_approx = np.roll(z_approx, -N // 2, (0, 1))[:N, :N]
 
-        f_kl = affect_rows(B2, np.dot(G1, g1)) + np.dot(B1, affect_rows(G2, g2))
+        z = add_noise(z, el, N)
+        fm = add_noise(fm, el, N * 2)
 
-        u_res = method_count(f_kl, 0)
-        u_res_stb = method_count(f_kl, 1)
+        z_approx_stb = method_v(fm, 2 * N, np.pi, 1)
+        z_approx1_stb = method_v(z * fmd.beta_0(X, Y), N, np.pi, 1)
+        z_approx_stb = np.roll(z_approx_stb, -N // 2, (0, 1))[:N, :N]
 
-        z_approx = spline_approximation(u_res.real, X, Y)
-        z_approx_stb = spline_approximation(u_res_stb.real, X, Y)
+        u_res = z_approx + z_approx1
+        u_res_stb = z_approx_stb + z_approx1_stb
 
-        offs = (np.average(z_approx[0, :]) + np.average(z_approx[N - 1, :]) +
-                np.average(z_approx[:, 0]) + np.average(z_approx[:, N - 1])) / 4
+        z_approx = spline_approximation(u_res.real, X, Y, N)
+        z_approx_stb = spline_approximation(u_res_stb.real, X, Y, N)
 
-        offs_stb = (np.average(z_approx_stb[0, :]) + np.average(z_approx_stb[N - 1, :]) +
-                    np.average(z_approx_stb[:, 0]) + np.average(z_approx_stb[:, N - 1])) / 4
+        # offs = (np.average(z_approx[0, :]) + np.average(z_approx[N - 1, :]) +
+                # np.average(z_approx[:, 0]) + np.average(z_approx[:, N - 1])) / 4
 
-        offs = np.max(z_approx) - np.max(z4)
-        offs_stb = np.max(z_approx_stb) - np.max(z4)
+        # offs_stb = (np.average(z_approx_stb[0, :]) + np.average(z_approx_stb[N - 1, :]) +
+                    # np.average(z_approx_stb[:, 0]) + np.average(z_approx_stb[:, N - 1])) / 4
 
-        mse_avg += mse(z4, z_approx - offs)
-        mse_avg_stb += mse(z4, z_approx_stb - offs_stb)
+        offs = np.max(z_approx) - np.max(z)
+        offs_stb = np.max(z_approx_stb) - np.max(z)
 
-        ssim_avg += (1 - ssim(z4, z_approx - offs,
-                              data_range=max(np.max(z4), np.max(z_approx - offs)) -
-                                         min(np.min(z4), np.min(z_approx - offs)))) / 2
-        ssim_avg_stb += (1 - ssim(z4, z_approx_stb - offs_stb,
-                                  data_range=max(np.max(z4), np.max(z_approx_stb - offs_stb)) -
-                                             min(np.min(z4), np.min(z_approx_stb - offs_stb)))) / 2
+        mse_avg += mse(z, z_approx - offs)
+        mse_avg_stb += mse(z, z_approx_stb - offs_stb)
+
+        ssim_avg += (1 - ssim(z, z_approx - offs,
+                              data_range=max(np.max(z), np.max(z_approx - offs)) -
+                                         min(np.min(z), np.min(z_approx - offs)))) / 2
+        ssim_avg_stb += (1 - ssim(z, z_approx_stb - offs_stb,
+                                  data_range=max(np.max(z), np.max(z_approx_stb - offs_stb)) -
+                                             min(np.min(z), np.min(z_approx_stb - offs_stb)))) / 2
 
     arr_perc[ind] = el
 
@@ -57,6 +73,8 @@ for ind, el in enumerate(np.linspace(0.01, 0.2, num=50)):
 
     arr_ssim[ind] = ssim_avg / 5
     arr_ssim_stb[ind] = ssim_avg_stb / 5
+    print("Epoch: ", ind, " mse_avg = ", mse_avg / 5, " mse_avg_stb = ", mse_avg_stb / 5, "\n")
+    print(" ssim_avg = ", ssim_avg / 5, " ssim_avg_stb = ", ssim_avg_stb / 5, "\n\n")
 
 plt.plot(arr_perc, arr_mse, label='Без стабилизатора')
 plt.plot(arr_perc, arr_mse_stb, label='Со стабилизатором')

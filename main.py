@@ -3,11 +3,11 @@ import matplotlib.pyplot as plt
 import finit_module as fmd
 from method import method_v
 
-N = 32
+N = 48
 Edge = np.pi
 
 
-def add_noise(z, perc):
+def add_noise(z, perc, N):
     ampl = (z.max() - z.min()) * perc
     return z + 2 * ampl * np.random.randn(N, N) - ampl / 2
 
@@ -117,7 +117,7 @@ z = multifocal([1, 3], [0.8, -1.5])
 z = spiral(3, 1, X, Y)
 # z = gauss(X, Y)
 
-# fm = add_noise(z, 0.02)
+z = add_noise(z, 0.01, N)
 fm = z * fmd.beta_1(X, Y)
 fm = continue_even(fm)
 x = np.linspace(-Edge, Edge, 2 * N, endpoint=False)
@@ -125,8 +125,8 @@ y = np.linspace(-Edge, Edge, 2 * N, endpoint=False)
 Y2, X2 = np.meshgrid(x, y)
 fm = np.roll(fm, N // 2, (0, 1)) * fmd.beta_0(X2, Y2)
 
-z_approx = method_v(fm, 2 * N, np.pi, 0)
-z_approx1 = method_v(z * fmd.beta_0(X, Y), N, np.pi, 0)
+z_approx = method_v(fm, 2 * N, np.pi, 1)
+z_approx1 = method_v(z * fmd.beta_0(X, Y), N, np.pi, 1)
 
 spiral_flag = 1
 
