@@ -64,40 +64,8 @@ for ind, el in enumerate(np.linspace(0.01, 0.2, num=40)):
         # offs_stb = (np.average(z_approx_stb[0, :]) + np.average(z_approx_stb[N - 1, :]) +
         # np.average(z_approx_stb[:, 0]) + np.average(z_approx_stb[:, N - 1])) / 4
 
-        '''fig = plt.figure()
-        ax = fig.add_subplot(121, projection='3d')
-        surf5 = ax.plot_surface(X, Y, z, cmap='plasma')
-        ax.set_title('Original function')
-        # ax.set_zlim([0, np.max(fm)])
-        ax.view_init(45, 60)
-        # fig.colorbar(surf1, location='bottom', shrink=0.6, aspect=7)
-
-        ax = fig.add_subplot(122, projection='3d')
-        surf6 = ax.plot_surface(X, Y, z_approx, cmap='plasma')
-        ax.set_title('Method approximation')
-        # ax.set_zlim([0, np.max((z_approx - offs))])
-        ax.view_init(45, 60)
-        # fig.colorbar(surf2, location='bottom', shrink=0.6, aspect=7)
-        plt.show()'''
-
         offs = np.min(z_approx) - np.min(z_src)
         offs_stb = np.min(z_approx_stb) - np.min(z_src)
-
-        '''fig = plt.figure()
-        ax = fig.add_subplot(121, projection='3d')
-        surf5 = ax.plot_surface(X, Y, z, cmap='plasma')
-        ax.set_title('Original function')
-        # ax.set_zlim([0, np.max(fm)])
-        ax.view_init(45, 60)
-        # fig.colorbar(surf1, location='bottom', shrink=0.6, aspect=7)
-
-        ax = fig.add_subplot(122, projection='3d')
-        surf6 = ax.plot_surface(X, Y, z_approx - offs, cmap='plasma')
-        ax.set_title('Method approximation')
-        # ax.set_zlim([0, np.max((z_approx - offs))])
-        ax.view_init(45, 60)
-        # fig.colorbar(surf2, location='bottom', shrink=0.6, aspect=7)
-        plt.show()'''
 
         mse_avg += mse(z_src, z_approx - offs)
         mse_avg_stb += mse(z_src, z_approx_stb - offs_stb)
