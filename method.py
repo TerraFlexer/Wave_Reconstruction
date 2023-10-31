@@ -68,13 +68,13 @@ def affect_rows(A, V):  # Применение оператора построч
 
 def shiftrow(arr, shift):  # Сдвиг строк
     arr = np.roll(arr, axis=0, shift=shift)
-    arr[shift, :] = 0
+    # arr[shift, :] = arr[shift - 1, :]
     return arr
 
 
 def shiftcolumn(arr, shift):  # Сдвиг столбцов
     arr = np.roll(arr, axis=1, shift=shift)
-    arr[:, shift] = 0
+    # arr[:, shift] = arr[:, shift - 1]
     return arr
 
 
@@ -116,15 +116,57 @@ def method_count(f_kl, pnt_cnt, lambds, mus, gammas, ss, st_stb):  # Функц�
     return u_kl
 
 
-def method_v(z, pnt_cnt, edge, st_stb, gamma=0.75):  # Общая обертка метода
+def continue_even(z):
+    cnt = np.shape(z)[0] * 2
+    z4 = np.zeros((cnt, cnt))
+    z4[:cnt // 2, :cnt // 2] = z
+    z4[:cnt // 2, cnt // 2:] = np.flip(z, 1)
+    z4[cnt // 2:, :cnt // 2] = np.flip(z, 0)
+    z4[cnt // 2:, cnt // 2:] = np.flip(z)
+    return z4
+
+
+def continue_even_dx(z):
+    cnt = np.shape(z)[0] * 2
+    z4 = np.zeros((cnt, cnt))
+    z4[:cnt // 2, :cnt // 2] = z
+    z4[:cnt // 2, cnt // 2:] = np.flip(z, 1)
+    z4[cnt // 2:, :cnt // 2] = -z
+    z4[cnt // 2:, cnt // 2:] = -np.flip(z, 1)
+    return z4
+
+
+def continue_even_dy(z):
+    cnt = np.shape(z)[0] * 2
+    z4 = np.zeros((cnt, cnt))
+    z4[:cnt // 2, :cnt // 2] = z
+    z4[:cnt // 2, cnt // 2:] = -np.flip(z, 0)
+    z4[cnt // 2:, :cnt // 2] = np.flip(z, 0)
+    z4[cnt // 2:, cnt // 2:] = -z
+    return z4
+
+
+def method_v(z, pnt_cnt, edge, st_stb, gamma=0.75, extend=1):  # Общая обертка метода
+
+    # Вычисляем матрицы производных
+    dx = fx(z, pnt_cnt, edge)
+    dy = fy(z, pnt_cnt, edge)
+
+    if extend:
+        dx = continue_even_dx(dx)
+        dy = continue_even_dy(dy)
+        dx = np.roll(dx, pnt_cnt // 2, (0, 1))
+        dy = np.roll(dy, pnt_cnt // 2, (0, 1))
+        pnt_cnt *= 2
+
     # Инициализируем сетку
     x = np.linspace(-edge, edge, pnt_cnt, endpoint=False)
     y = np.linspace(-edge, edge, pnt_cnt, endpoint=False)
     Y, X = np.meshgrid(x, y)
 
     # Вычисляем матрицы производных по направлению функции и раскладываем их по базису сплайнов
-    matrix_g1 = spline_coefficients(fx(z, pnt_cnt, edge), pnt_cnt, X, Y)
-    matrix_g2 = spline_coefficients(fy(z, pnt_cnt, edge), pnt_cnt, X, Y)
+    matrix_g1 = spline_coefficients(dx, pnt_cnt, X, Y)
+    matrix_g2 = spline_coefficients(dy, pnt_cnt, X, Y)
 
     # Вычисляем необходимые для работы метода матрицы
     lambds, mus, gammas, ss, B1, B2, G1, G2 = prepare_data(pnt_cnt, gamma)
@@ -137,4 +179,9 @@ def method_v(z, pnt_cnt, edge, st_stb, gamma=0.75):  # Общая обертка
 
     # Раскладываем Real часть полученной функции и раскладываем ее по базису сплайнов
     z_approx = spline_approximation(u_res.real, X, Y, pnt_cnt)
+
+    if extend:
+        pnt_cnt //= 2
+        z_approx = np.roll(z_approx, -pnt_cnt // 2, (0, 1))[:pnt_cnt, :pnt_cnt]
+
     return z_approx

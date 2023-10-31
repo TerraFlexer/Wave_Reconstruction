@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from skimage.metrics import structural_similarity as ssim
 from skimage.metrics import mean_squared_error as mse
-from main import add_noise, spiral, continue_even, Edge, N
+from main import add_noise, spiral, Edge, N
 from method import method_v
 from splines import spline_approximation, spline_coefficients
 import finit_module as fmd
@@ -30,30 +30,8 @@ for ind, el in enumerate(np.linspace(0.01, 0.2, num=40)):
         # Добавляем шум к исходному фронту
         z = add_noise(z_src, el, N)
 
-        # Инициализируем расширение для одного из кусков
-        fm = z * fmd.beta_1(X, Y)
-        fm = continue_even(fm)
-        x = np.linspace(-Edge, Edge, 2 * N, endpoint=False)
-        y = np.linspace(-Edge, Edge, 2 * N, endpoint=False)
-        Y2, X2 = np.meshgrid(x, y)
-        fm = np.roll(fm, N // 2, (0, 1)) * fmd.beta_0(X2, Y2)
-
-        # Вычисляем прогоны метода для каждого из двух кусков
-        z_approx = method_v(fm, 2 * N, np.pi, 0)
-        z_approx1 = method_v(z * fmd.beta_0(X, Y), N, np.pi, 0)
-
-        # Обрезаем расширенный кусок
-        z_approx = np.roll(z_approx, -N // 2, (0, 1))[:N, :N]
-
-        # Вычисляем прогоны метода для каждого из двух кусков со стабилизатором
-        z_approx_stb = method_v(fm, 2 * N, np.pi, 1)
-        z_approx1_stb = method_v(z * fmd.beta_0(X, Y), N, np.pi, 1)
-
-        # Обрезаем расширенный кусок
-        z_approx_stb = np.roll(z_approx_stb, -N // 2, (0, 1))[:N, :N]
-
-        u_res = z_approx + z_approx1
-        u_res_stb = z_approx_stb + z_approx1_stb
+        u_res = method_v(z, N, np.pi, 0)
+        u_res_stb = method_v(z, N, np.pi, 1)
 
         z_approx = spline_approximation(u_res.real, X, Y, N)
         z_approx_stb = spline_approximation(u_res_stb.real, X, Y, N)
