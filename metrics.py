@@ -13,25 +13,26 @@ arr_ssim = np.zeros(40)
 arr_mse_stb = np.zeros(40)
 arr_ssim_stb = np.zeros(40)
 
-for ind, el in enumerate(np.linspace(0.01, 0.2, num=40)):
+for ind, el in enumerate(np.linspace(0.0, 0.05, num=40)):
     mse_avg = 0
     mse_avg_stb = 0
     ssim_avg = 0
     ssim_avg_stb = 0
+    # Инициализируем сетку
+    x = np.linspace(-Edge, Edge, N, endpoint=False)
+    y = np.linspace(-Edge, Edge, N, endpoint=False)
+    Y, X = np.meshgrid(x, y)
+
+    # Считаем исходную спиральную функцию
+    z_src = spiral(3, 1, X, Y)
+
     for i in range(5):
-        # Инициализируем сетку
-        x = np.linspace(-Edge, Edge, N, endpoint=False)
-        y = np.linspace(-Edge, Edge, N, endpoint=False)
-        Y, X = np.meshgrid(x, y)
-
-        # Считаем исходную спиральную функцию
-        z_src = spiral(3, 1, X, Y)
-
         # Добавляем шум к исходному фронту
         z = add_noise(z_src, el, N)
 
         u_res = method_v(z, N, np.pi, 0)
         u_res_stb = method_v(z, N, np.pi, 1)
+        # gamma=1.2224
 
         z_approx = spline_approximation(u_res.real, X, Y, N)
         z_approx_stb = spline_approximation(u_res_stb.real, X, Y, N)
@@ -63,7 +64,7 @@ for ind, el in enumerate(np.linspace(0.01, 0.2, num=40)):
     arr_ssim[ind] = ssim_avg / 5
     arr_ssim_stb[ind] = ssim_avg_stb / 5
     print("Epoch: ", ind, " mse_avg = ", mse_avg / 5, " mse_avg_stb = ", mse_avg_stb / 5, "\n")
-    print(" ssim_avg = ", ssim_avg / 5, " ssim_avg_stb = ", ssim_avg_stb / 5, "\n\n")
+    print("ssim_avg = ", ssim_avg / 5, " ssim_avg_stb = ", ssim_avg_stb / 5, "\n\n")
 
 plt.plot(arr_perc, arr_mse, label='Без стабилизатора')
 plt.plot(arr_perc, arr_mse_stb, label='Со стабилизатором')

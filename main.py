@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import finit_module as fmd
 from method import method_v
 
-N = 24
+N = 32
 Edge = np.pi
 
 
@@ -82,6 +82,17 @@ def spiral(f0, f1, x, y):
     return u
 
 
+def offset(z1, z2, pnt, sprl_flg):
+    if sprl_flg != 1:
+        offs = (np.average(z1[0, :]) + np.average(z2[pnt - 1, :]) +
+                np.average(z1[:, 0]) + np.average(z2[:, pnt - 1])) / 4
+    else:
+        offs = np.abs(np.min(z1) - np.min(z2))
+
+    return offs
+
+
+
 def make_zeros(z, pnt=4):
     sz = np.shape(z)[0]
     z[:pnt, :] = 0
@@ -107,9 +118,9 @@ z = multifocal([1, 3], [0.8, -1.5])
 z = spiral(3, 1, X, Y)
 # z = gauss(X, Y)
 
-# z = add_noise(z, 0.01, N)
+z = add_noise(z, 0.01, N)
 
-z_approx = method_v(z, N, np.pi, 0, extend=1)
+z_approx = method_v(z, N, np.pi, 1, gamma=0.6689141505742755)
 
 spiral_flag = 1
 

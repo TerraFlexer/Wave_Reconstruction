@@ -146,18 +146,11 @@ def continue_even_dy(z):
     return z4
 
 
-def method_v(z, pnt_cnt, edge, st_stb, gamma=0.75, extend=1):  # Общая обертка метода
+def method_v(z, pnt_cnt, edge, st_stb, gamma=0.75):  # Общая обертка метода
 
     # Вычисляем матрицы производных
     dx = fx(z, pnt_cnt, edge)
     dy = fy(z, pnt_cnt, edge)
-
-    if extend:
-        dx = continue_even_dx(dx)
-        dy = continue_even_dy(dy)
-        dx = np.roll(dx, pnt_cnt // 2, (0, 1))
-        dy = np.roll(dy, pnt_cnt // 2, (0, 1))
-        pnt_cnt *= 2
 
     # Инициализируем сетку
     x = np.linspace(-edge, edge, pnt_cnt, endpoint=False)
@@ -179,9 +172,5 @@ def method_v(z, pnt_cnt, edge, st_stb, gamma=0.75, extend=1):  # Общая об
 
     # Раскладываем Real часть полученной функции и раскладываем ее по базису сплайнов
     z_approx = spline_approximation(u_res.real, X, Y, pnt_cnt)
-
-    if extend:
-        pnt_cnt //= 2
-        z_approx = np.roll(z_approx, -pnt_cnt // 2, (0, 1))[:pnt_cnt, :pnt_cnt]
 
     return z_approx
