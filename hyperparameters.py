@@ -8,7 +8,10 @@ from scipy.special import kl_div
 
 
 def objective(trial):
-    gamma = trial.suggest_float('gammas', 0, 5)
+    gammas = np.zeros((N, N))
+    for i in range(N):
+        for j in range(N):
+            gammas[i][j] = trial.suggest_float(f"gammas{i}{j}", 0, 1)
 
     x = np.linspace(-Edge, Edge, N, endpoint=False)
     y = np.linspace(-Edge, Edge, N, endpoint=False)
@@ -23,7 +26,7 @@ def objective(trial):
 
         z1 = add_noise(z, 0.15, N)
 
-        z_approx = method_v(z1, N, Edge, 1, gamma)
+        z_approx = method_v(z1, N, Edge, 1, gammas)
 
         offs = np.min(z_approx) - np.min(z)
 
