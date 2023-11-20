@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from skimage.metrics import structural_similarity as ssim
 from skimage.metrics import mean_squared_error as mse
-from main import add_noise, spiral, Edge, N
+from main import add_noise, spiral, Edge, N, spiral_flag, multifocal, offset
 from method import method_v
 from splines import spline_approximation, spline_coefficients
 import finit_module as fmd
@@ -23,8 +23,11 @@ for ind, el in enumerate(np.linspace(0.0, 0.05, num=40)):
     y = np.linspace(-Edge, Edge, N, endpoint=False)
     Y, X = np.meshgrid(x, y)
 
-    # Считаем исходную спиральную функцию
-    z_src = spiral(3, 1, X, Y)
+    # Считаем исходную мультифокальную/спиральную функцию
+    if spiral_flag:
+        z_src = spiral(3, 1, X, Y)
+    else:
+        z_src = multifocal([1, 3], [0.8, -1.5])
 
     for i in range(5):
         # Добавляем шум к исходному фронту
@@ -43,8 +46,8 @@ for ind, el in enumerate(np.linspace(0.0, 0.05, num=40)):
         # offs_stb = (np.average(z_approx_stb[0, :]) + np.average(z_approx_stb[N - 1, :]) +
         # np.average(z_approx_stb[:, 0]) + np.average(z_approx_stb[:, N - 1])) / 4
 
-        offs = np.min(z_approx) - np.min(z_src)
-        offs_stb = np.min(z_approx_stb) - np.min(z_src)
+        offs = offset(z_approx, z_src, N, spiral_flag)
+        offs_stb = offset(z_approx_stb, z_src, N, spiral_flag)
 
         mse_avg += mse(z_src, z_approx - offs)
         mse_avg_stb += mse(z_src, z_approx_stb - offs_stb)
