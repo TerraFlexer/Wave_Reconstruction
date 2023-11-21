@@ -12,8 +12,19 @@ arr_mse = np.zeros(40)
 arr_ssim = np.zeros(40)
 arr_mse_stb = np.zeros(40)
 arr_ssim_stb = np.zeros(40)
+gammas = np.ones((N, N)) * 0.25
+gamma_center = 0.41475693666152336
+gamma_middle = 0.7257000602451635
+for i in range(N):
+    for j in range(N):
+        if abs(N // 2 - 1 - i) <= 10 and abs(N // 2 - 1 - j) <= 10:
+            gammas[i][j] = gamma_middle
+for i in range(N):
+    for j in range(N):
+        if abs(N // 2 - 1 - i) <= 4 and abs(N // 2 - 1 - j) <= 4:
+            gammas[i][j] = gamma_center
 
-for ind, el in enumerate(np.linspace(0.0, 0.05, num=40)):
+for ind, el in enumerate(np.linspace(0.0, 0.1, num=40)):
     mse_avg = 0
     mse_avg_stb = 0
     ssim_avg = 0
@@ -34,8 +45,7 @@ for ind, el in enumerate(np.linspace(0.0, 0.05, num=40)):
         z = add_noise(z_src, el, N)
 
         u_res = method_v(z, N, np.pi, 0)
-        u_res_stb = method_v(z, N, np.pi, 1)
-        # gamma=1.2224
+        u_res_stb = method_v(z, N, np.pi, 1, gammas)
 
         z_approx = spline_approximation(u_res.real, X, Y, N)
         z_approx_stb = spline_approximation(u_res_stb.real, X, Y, N)

@@ -5,14 +5,22 @@ from main import spiral, Edge, N, add_noise, multifocal, offset
 from skimage.metrics import mean_squared_error as mse
 from skimage.metrics import structural_similarity as ssim
 from scipy.special import kl_div
+from scipy.fft import fft2, ifft2, fftshift, ifftshift
 import matplotlib.pyplot as plt
 
 
 def objective(trial):
-    gammas = np.zeros((N, N))
+    gammas = np.ones((N, N)) * 0.25
+    gamma_center = trial.suggest_float(f"gamma_center", 0.25, 0.75)
+    gamma_middle = trial.suggest_float(f"gamma_middle", 0.25, 0.75)
     for i in range(N):
         for j in range(N):
-            gammas[i][j] = trial.suggest_float(f"gammas{i}{j}", 0.4, 0.6)
+            if abs(N // 2 - 1 - i) <= 10 and abs(N // 2 - 1 - j) <= 10:
+                gammas[i][j] = gamma_middle
+    for i in range(N):
+        for j in range(N):
+            if abs(N // 2 - 1 - i) <= 4 and abs(N // 2 - 1 - j) <= 4:
+                gammas[i][j] = gamma_center
 
     x = np.linspace(-Edge, Edge, N, endpoint=False)
     y = np.linspace(-Edge, Edge, N, endpoint=False)
@@ -44,15 +52,21 @@ def objective(trial):
 
 # 3. Create a study object and optimize the objective function.
 study = optuna.create_study()
-study.optimize(objective, n_trials=200)
+study.optimize(objective, n_trials=100)
 
 print(study.best_params)
 
-gammas = np.zeros((N, N))
+gammas = np.ones((N, N)) * 0.25
+gamma_center = study.best_params[f"gamma_center"]
+gamma_middle = study.best_params[f"gamma_middle"]
 for i in range(N):
     for j in range(N):
-        gammas[i][j] = study.best_params[f"gammas{i}{j}"]
-
+        if abs(N // 2 - 1 - i) <= 10 and abs(N // 2 - 1 - j) <= 10:
+            gammas[i][j] = gamma_middle
+for i in range(N):
+    for j in range(N):
+        if abs(N // 2 - 1 - i) <= 4 and abs(N // 2 - 1 - j) <= 4:
+            gammas[i][j] = gamma_center
 
 x = np.linspace(0, N - 1, N, endpoint=False)
 y = np.linspace(0, N - 1, N, endpoint=False)
@@ -60,6 +74,12 @@ Y, X = np.meshgrid(x, y)
 
 fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
 surf1 = ax.plot_surface(X, Y, gammas, cmap='plasma')
+ax.set_title('gammas')
+ax.view_init(45, 60)
+plt.show()
+
+fig1, ax1 = plt.subplots(subplot_kw={"projection": "3d"})
+surf2 = ax1.plot_surface(X, Y, ifft2(gammas).real, cmap='plasma')
 ax.set_title('gammas')
 ax.view_init(45, 60)
 plt.show()

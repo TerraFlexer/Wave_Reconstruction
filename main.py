@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import finit_module as fmd
 from method import method_v
 
-N = 16
+N = 32
 Edge = np.pi
 
 
@@ -119,7 +119,7 @@ z = multifocal([1, 3], [0.8, -1.5])
 
 z = add_noise(z, 0.01, N)
 
-z_approx = method_v(z, N, np.pi, 1, gamma=0.75)
+z_approx = method_v(z, N, np.pi, 0, gamma=0.5)
 
 spiral_flag = 0
 
