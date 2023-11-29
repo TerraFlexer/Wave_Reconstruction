@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import finit_module as fmd
 from method import method_v
 
-N = 32
+N = 64
 Edge = np.pi
 
 

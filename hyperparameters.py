@@ -10,16 +10,21 @@ import matplotlib.pyplot as plt
 
 
 def objective(trial):
-    gammas = np.ones((N, N)) * 0.25
+    gammas = np.ones((N, N)) * 0.5
     gamma_center = trial.suggest_float(f"gamma_center", 0.25, 0.75)
-    gamma_middle = trial.suggest_float(f"gamma_middle", 0.25, 0.75)
+    gamma_middle1 = trial.suggest_float(f"gamma_middle1", 0.25, 0.75)
+    gamma_middle2 = trial.suggest_float(f"gamma_middle2", 0.25, 0.75)
     for i in range(N):
         for j in range(N):
-            if abs(N // 2 - 1 - i) <= 10 and abs(N // 2 - 1 - j) <= 10:
-                gammas[i][j] = gamma_middle
+            if 25 < (N // 2 - 1 - i) ** 2 + (N // 2 - 1 - j) ** 2 <= 36:
+                gammas[i][j] = gamma_middle1
     for i in range(N):
         for j in range(N):
-            if abs(N // 2 - 1 - i) <= 4 and abs(N // 2 - 1 - j) <= 4:
+            if 9 < (N // 2 - 1 - i) ** 2 + (N // 2 - 1 - j) ** 2 <= 25:
+                gammas[i][j] = gamma_middle2
+    for i in range(N):
+        for j in range(N):
+            if (N // 2 - 1 - i) ** 2 + (N // 2 - 1 - j) ** 2 <= 9:
                 gammas[i][j] = gamma_center
 
     x = np.linspace(-Edge, Edge, N, endpoint=False)
@@ -52,20 +57,26 @@ def objective(trial):
 
 # 3. Create a study object and optimize the objective function.
 study = optuna.create_study()
-study.optimize(objective, n_trials=100)
+study.optimize(objective, n_trials=500)
 
 print(study.best_params)
 
-gammas = np.ones((N, N)) * 0.25
+gammas = np.ones((N, N)) * 0.5
 gamma_center = study.best_params[f"gamma_center"]
-gamma_middle = study.best_params[f"gamma_middle"]
+gamma_middle1 = study.best_params[f"gamma_middle1"]
+gamma_middle2 = study.best_params[f"gamma_middle2"]
+
 for i in range(N):
     for j in range(N):
-        if abs(N // 2 - 1 - i) <= 10 and abs(N // 2 - 1 - j) <= 10:
-            gammas[i][j] = gamma_middle
+        if 25 < (N // 2 - 1 - i) ** 2 + (N // 2 - 1 - j) ** 2 <= 36:
+            gammas[i][j] = gamma_middle1
 for i in range(N):
     for j in range(N):
-        if abs(N // 2 - 1 - i) <= 4 and abs(N // 2 - 1 - j) <= 4:
+        if 9 < (N // 2 - 1 - i) ** 2 + (N // 2 - 1 - j) ** 2 <= 25:
+            gammas[i][j] = gamma_middle2
+for i in range(N):
+    for j in range(N):
+        if (N // 2 - 1 - i) ** 2 + (N // 2 - 1 - j) ** 2 <= 9:
             gammas[i][j] = gamma_center
 
 x = np.linspace(0, N - 1, N, endpoint=False)
@@ -76,6 +87,12 @@ fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
 surf1 = ax.plot_surface(X, Y, gammas, cmap='plasma')
 ax.set_title('gammas')
 ax.view_init(45, 60)
+plt.show()
+
+fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+surf1 = ax.plot_surface(X, Y, gammas, cmap='plasma')
+ax.set_title('gammas')
+ax.view_init(0, 90)
 plt.show()
 
 fig1, ax1 = plt.subplots(subplot_kw={"projection": "3d"})
