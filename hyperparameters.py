@@ -16,15 +16,15 @@ def objective(trial):
     gamma_middle2 = trial.suggest_float(f"gamma_middle2", 0.25, 0.75)
     for i in range(N):
         for j in range(N):
-            if 25 < (N // 2 - 1 - i) ** 2 + (N // 2 - 1 - j) ** 2 <= 36:
+            if 144 < (N // 2 - 1 - i) ** 2 + (N // 2 - 1 - j) ** 2 <= 250:
                 gammas[i][j] = gamma_middle1
     for i in range(N):
         for j in range(N):
-            if 9 < (N // 2 - 1 - i) ** 2 + (N // 2 - 1 - j) ** 2 <= 25:
+            if 25 < (N // 2 - 1 - i) ** 2 + (N // 2 - 1 - j) ** 2 <= 144:
                 gammas[i][j] = gamma_middle2
     for i in range(N):
         for j in range(N):
-            if (N // 2 - 1 - i) ** 2 + (N // 2 - 1 - j) ** 2 <= 9:
+            if (N // 2 - 1 - i) ** 2 + (N // 2 - 1 - j) ** 2 <= 25:
                 gammas[i][j] = gamma_center
 
     x = np.linspace(-Edge, Edge, N, endpoint=False)
@@ -68,15 +68,15 @@ gamma_middle2 = study.best_params[f"gamma_middle2"]
 
 for i in range(N):
     for j in range(N):
-        if 25 < (N // 2 - 1 - i) ** 2 + (N // 2 - 1 - j) ** 2 <= 36:
+        if 144 < (N // 2 - 1 - i) ** 2 + (N // 2 - 1 - j) ** 2 <= 250:
             gammas[i][j] = gamma_middle1
 for i in range(N):
     for j in range(N):
-        if 9 < (N // 2 - 1 - i) ** 2 + (N // 2 - 1 - j) ** 2 <= 25:
+        if 25 < (N // 2 - 1 - i) ** 2 + (N // 2 - 1 - j) ** 2 <= 144:
             gammas[i][j] = gamma_middle2
 for i in range(N):
     for j in range(N):
-        if (N // 2 - 1 - i) ** 2 + (N // 2 - 1 - j) ** 2 <= 9:
+        if (N // 2 - 1 - i) ** 2 + (N // 2 - 1 - j) ** 2 <= 25:
             gammas[i][j] = gamma_center
 
 x = np.linspace(0, N - 1, N, endpoint=False)
@@ -89,14 +89,8 @@ ax.set_title('gammas')
 ax.view_init(45, 60)
 plt.show()
 
-fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
-surf1 = ax.plot_surface(X, Y, gammas, cmap='plasma')
+fig1, ax = plt.subplots(subplot_kw={"projection": "3d"})
+surf2 = ax.plot_surface(X, Y, gammas, cmap='plasma')
 ax.set_title('gammas')
-ax.view_init(0, 90)
-plt.show()
-
-fig1, ax1 = plt.subplots(subplot_kw={"projection": "3d"})
-surf2 = ax1.plot_surface(X, Y, ifft2(gammas).real, cmap='plasma')
-ax.set_title('gammas')
-ax.view_init(45, 60)
+ax.view_init(90, 0)
 plt.show()
