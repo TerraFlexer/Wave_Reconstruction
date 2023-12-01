@@ -56,6 +56,24 @@ def prepare_data(pnt_cnt, gamma=0.75):  # Инициализация всех д
     return lambds, mus, gammas, ss, B1, B2, G1, G2
 
 
+def fill_gammas(gamma_values, rad_values, gamma_side, pnt_cnt):
+    gammas = np.ones((pnt_cnt, pnt_cnt)) * gamma_side
+
+    n = len(gamma_values)
+    for k in range(n):
+        for i in range(pnt_cnt):
+            for j in range(pnt_cnt):
+                r2 = rad_values[k]
+                if k == 0:
+                    r1 = 0
+                else:
+                    r1 = rad_values[k - 1]
+                if r1 ** 2 < (pnt_cnt // 2 - 1 - i) ** 2 + (pnt_cnt // 2 - 1 - j) ** 2 <= r2 ** 2:
+                    gammas[i][j] = gamma_values[k]
+
+    return gammas
+
+
 def affect_rows(A, V):  # Применение оператора построчно
     N = np.shape(A)[0]
     Vr = np.zeros((N, N))

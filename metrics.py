@@ -3,32 +3,36 @@ import matplotlib.pyplot as plt
 from skimage.metrics import structural_similarity as ssim
 from skimage.metrics import mean_squared_error as mse
 from main import add_noise, spiral, Edge, N, spiral_flag, multifocal, offset
-from method import method_v
+from method import method_v, fill_gammas
 from splines import spline_approximation, spline_coefficients
 import finit_module as fmd
 
 arr_perc = np.zeros(40)
 arr_mse = np.zeros(40)
 arr_ssim = np.zeros(40)
-arr_mse_stb = np.zeros(40)
-arr_ssim_stb = np.zeros(40)
-gammas = np.ones((N, N)) * 0.25
-gamma_center = 0.41475693666152336
-gamma_middle = 0.7257000602451635
-for i in range(N):
-    for j in range(N):
-        if abs(N // 2 - 1 - i) <= 10 and abs(N // 2 - 1 - j) <= 10:
-            gammas[i][j] = gamma_middle
-for i in range(N):
-    for j in range(N):
-        if abs(N // 2 - 1 - i) <= 4 and abs(N // 2 - 1 - j) <= 4:
-            gammas[i][j] = gamma_center
+arr_mse_stb_5 = np.zeros(40)
+arr_ssim_stb_5 = np.zeros(40)
+arr_mse_stb_75 = np.zeros(40)
+arr_ssim_stb_75 = np.zeros(40)
+arr_mse_stb_g = np.zeros(40)
+arr_ssim_stb_g = np.zeros(40)
+
+gamma_center = 0.4231414893578323
+gamma_middle1 = 0.7328285777195578
+gamma_middle2 = 0.7377835998820123
+gamma_side = 0.43422662583708616
+
+gammas = fill_gammas([gamma_center, gamma_middle1, gamma_middle2], [8, 15, 25], gamma_side, N)
 
 for ind, el in enumerate(np.linspace(0.0, 0.1, num=40)):
     mse_avg = 0
-    mse_avg_stb = 0
+    mse_avg_stb_5 = 0
+    mse_avg_stb_75 = 0
     ssim_avg = 0
-    ssim_avg_stb = 0
+    ssim_avg_stb_5 = 0
+    ssim_avg_stb_75 = 0
+    mse_avg_stb_g = 0
+    ssim_avg_stb_g = 0
     # Инициализируем сетку
     x = np.linspace(-Edge, Edge, N, endpoint=False)
     y = np.linspace(-Edge, Edge, N, endpoint=False)
@@ -45,49 +49,66 @@ for ind, el in enumerate(np.linspace(0.0, 0.1, num=40)):
         z = add_noise(z_src, el, N)
 
         u_res = method_v(z, N, np.pi, 0)
-        u_res_stb = method_v(z, N, np.pi, 1, gammas)
+        u_res_stb_5 = method_v(z, N, np.pi, 1, 0.5)
+        u_res_stb_75 = method_v(z, N, np.pi, 1, 0.75)
+        u_res_stb_g = method_v(z, N, np.pi, 1, gammas)
 
         z_approx = spline_approximation(u_res.real, X, Y, N)
-        z_approx_stb = spline_approximation(u_res_stb.real, X, Y, N)
-
-        # offs = (np.average(z_approx[0, :]) + np.average(z_approx[N - 1, :]) +
-        # np.average(z_approx[:, 0]) + np.average(z_approx[:, N - 1])) / 4
-
-        # offs_stb = (np.average(z_approx_stb[0, :]) + np.average(z_approx_stb[N - 1, :]) +
-        # np.average(z_approx_stb[:, 0]) + np.average(z_approx_stb[:, N - 1])) / 4
+        z_approx_stb_5 = spline_approximation(u_res_stb_5.real, X, Y, N)
+        z_approx_stb_75 = spline_approximation(u_res_stb_75.real, X, Y, N)
+        z_approx_stb_g = spline_approximation(u_res_stb_g.real, X, Y, N)
 
         offs = offset(z_approx, z_src, N, spiral_flag)
-        offs_stb = offset(z_approx_stb, z_src, N, spiral_flag)
+        offs_stb_5 = offset(z_approx_stb_5, z_src, N, spiral_flag)
+        offs_stb_75 = offset(z_approx_stb_75, z_src, N, spiral_flag)
+        offs_stb_g = offset(z_approx_stb_g, z_src, N, spiral_flag)
 
         mse_avg += mse(z_src, z_approx - offs)
-        mse_avg_stb += mse(z_src, z_approx_stb - offs_stb)
+        mse_avg_stb_5 += mse(z_src, z_approx_stb_5 - offs_stb_5)
+        mse_avg_stb_75 += mse(z_src, z_approx_stb_75 - offs_stb_75)
+        mse_avg_stb_g += mse(z_src, z_approx_stb_g - offs_stb_g)
 
         ssim_avg += (1 - ssim(z_src, z_approx - offs,
                               data_range=max(np.max(z_src), np.max(z_approx - offs)) -
                                          min(np.min(z_src), np.min(z_approx - offs)))) / 2
-        ssim_avg_stb += (1 - ssim(z_src, z_approx_stb - offs_stb,
-                                  data_range=max(np.max(z_src), np.max(z_approx_stb - offs_stb)) -
-                                             min(np.min(z_src), np.min(z_approx_stb - offs_stb)))) / 2
+        ssim_avg_stb_5 += (1 - ssim(z_src, z_approx_stb_5 - offs_stb_5,
+                                  data_range=max(np.max(z_src), np.max(z_approx_stb_5 - offs_stb_5)) -
+                                             min(np.min(z_src), np.min(z_approx_stb_5 - offs_stb_5)))) / 2
+        ssim_avg_stb_75 += (1 - ssim(z_src, z_approx_stb_75 - offs_stb_75,
+                                    data_range=max(np.max(z_src), np.max(z_approx_stb_75 - offs_stb_75)) -
+                                               min(np.min(z_src), np.min(z_approx_stb_75 - offs_stb_75)))) / 2
+        ssim_avg_stb_g += (1 - ssim(z_src, z_approx_stb_g - offs_stb_g,
+                                    data_range=max(np.max(z_src), np.max(z_approx_stb_g - offs_stb_g)) -
+                                               min(np.min(z_src), np.min(z_approx_stb_g - offs_stb_g)))) / 2
 
     arr_perc[ind] = el
 
     arr_mse[ind] = mse_avg / 5
-    arr_mse_stb[ind] = mse_avg_stb / 5
+    arr_mse_stb_5[ind] = mse_avg_stb_5 / 5
+    arr_mse_stb_75[ind] = mse_avg_stb_75 / 5
+    arr_mse_stb_g[ind] = mse_avg_stb_g / 5
 
     arr_ssim[ind] = ssim_avg / 5
-    arr_ssim_stb[ind] = ssim_avg_stb / 5
-    print("Epoch: ", ind, " mse_avg = ", mse_avg / 5, " mse_avg_stb = ", mse_avg_stb / 5, "\n")
-    print("ssim_avg = ", ssim_avg / 5, " ssim_avg_stb = ", ssim_avg_stb / 5, "\n\n")
+    arr_ssim_stb_5[ind] = ssim_avg_stb_5 / 5
+    arr_ssim_stb_75[ind] = ssim_avg_stb_75 / 5
+    arr_ssim_stb_g[ind] = ssim_avg_stb_g / 5
+
+    print("Epoch: ", ind, " mse_avg = ", mse_avg / 5, " mse_avg_stb_5 = ", mse_avg_stb_5 / 5)
+    print("ssim_avg = ", ssim_avg / 5, " ssim_avg_stb_5 = ", ssim_avg_stb_5 / 5, "\n")
 
 plt.plot(arr_perc, arr_mse, label='Без стабилизатора')
-plt.plot(arr_perc, arr_mse_stb, label='Со стабилизатором')
+plt.plot(arr_perc, arr_mse_stb_5, label='Со стабилизатором 0.5')
+plt.plot(arr_perc, arr_mse_stb_75, label='Со стабилизатором 0.75')
+plt.plot(arr_perc, arr_mse_stb_g, label='Со стабилизатором gamma')
 plt.ylabel("MSE")
 plt.xlabel("Шум(доля от максимального значения)")
 plt.legend()
 plt.show()
 
 plt.plot(arr_perc, arr_ssim, label='Без стабилизатора')
-plt.plot(arr_perc, arr_ssim_stb, label='Со стабилизатором')
+plt.plot(arr_perc, arr_ssim_stb_5, label='Со стабилизатором 0.5')
+plt.plot(arr_perc, arr_ssim_stb_75, label='Со стабилизатором 0.75')
+plt.plot(arr_perc, arr_ssim_stb_g, label='Со стабилизатором gamma')
 plt.ylabel("DSSIM")
 plt.xlabel("Шум(доля от максимального значения)")
 plt.legend()

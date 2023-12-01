@@ -1,6 +1,6 @@
 import optuna
 import numpy as np
-from method import method_v
+from method import method_v, fill_gammas
 from main import spiral, Edge, N, add_noise, multifocal, offset
 from skimage.metrics import mean_squared_error as mse
 from skimage.metrics import structural_similarity as ssim
@@ -10,22 +10,12 @@ import matplotlib.pyplot as plt
 
 
 def objective(trial):
-    gammas = np.ones((N, N)) * 0.5
     gamma_center = trial.suggest_float(f"gamma_center", 0.25, 0.75)
     gamma_middle1 = trial.suggest_float(f"gamma_middle1", 0.25, 0.75)
     gamma_middle2 = trial.suggest_float(f"gamma_middle2", 0.25, 0.75)
-    for i in range(N):
-        for j in range(N):
-            if 144 < (N // 2 - 1 - i) ** 2 + (N // 2 - 1 - j) ** 2 <= 250:
-                gammas[i][j] = gamma_middle1
-    for i in range(N):
-        for j in range(N):
-            if 25 < (N // 2 - 1 - i) ** 2 + (N // 2 - 1 - j) ** 2 <= 144:
-                gammas[i][j] = gamma_middle2
-    for i in range(N):
-        for j in range(N):
-            if (N // 2 - 1 - i) ** 2 + (N // 2 - 1 - j) ** 2 <= 25:
-                gammas[i][j] = gamma_center
+    gamma_side = trial.suggest_float(f"gamma_side", 0.25, 0.75)
+
+    gammas = fill_gammas([gamma_center, gamma_middle1, gamma_middle2], [8, 15, 25], gamma_side, N)
 
     x = np.linspace(-Edge, Edge, N, endpoint=False)
     y = np.linspace(-Edge, Edge, N, endpoint=False)
@@ -57,27 +47,16 @@ def objective(trial):
 
 # 3. Create a study object and optimize the objective function.
 study = optuna.create_study()
-study.optimize(objective, n_trials=500)
+study.optimize(objective, n_trials=1000)
 
 print(study.best_params)
 
-gammas = np.ones((N, N)) * 0.5
 gamma_center = study.best_params[f"gamma_center"]
 gamma_middle1 = study.best_params[f"gamma_middle1"]
 gamma_middle2 = study.best_params[f"gamma_middle2"]
+gamma_side = study.best_params[f"gamma_side"]
 
-for i in range(N):
-    for j in range(N):
-        if 144 < (N // 2 - 1 - i) ** 2 + (N // 2 - 1 - j) ** 2 <= 250:
-            gammas[i][j] = gamma_middle1
-for i in range(N):
-    for j in range(N):
-        if 25 < (N // 2 - 1 - i) ** 2 + (N // 2 - 1 - j) ** 2 <= 144:
-            gammas[i][j] = gamma_middle2
-for i in range(N):
-    for j in range(N):
-        if (N // 2 - 1 - i) ** 2 + (N // 2 - 1 - j) ** 2 <= 25:
-            gammas[i][j] = gamma_center
+gammas = fill_gammas([gamma_center, gamma_middle1, gamma_middle2], [8, 15, 25], gamma_side, N)
 
 x = np.linspace(0, N - 1, N, endpoint=False)
 y = np.linspace(0, N - 1, N, endpoint=False)
