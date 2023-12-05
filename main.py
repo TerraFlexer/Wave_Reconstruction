@@ -8,8 +8,8 @@ Edge = np.pi
 
 
 def add_noise(z, perc, N):
-    ampl = (z.max() - z.min()) * perc
-    return z + 2 * ampl * np.random.randn(N, N) - ampl / 2
+    ampl = abs(z.max() - z.min()) * perc
+    return z + ampl * np.random.randn(N, N)
 
 
 x = np.linspace(-Edge, Edge, N, endpoint=False)
@@ -82,6 +82,28 @@ def spiral(f0, f1, x, y):
     return u
 
 
+def generate_random_multifocal():
+    n = np.random.randint(2, 5)
+    n= 4
+
+    hr = 3
+
+    rs = np.zeros(n)
+    zs = np.zeros(n)
+    for i in range(n):
+        rs[i] = np.random.uniform(0.7, hr)
+        hr = rs[i]
+        if i == 0:
+            zs[i] = np.random.uniform(-rs[i], 0)
+        else:
+            rz = np.sqrt(rs[i - 1] ** 2 - rs[i] ** 2) + zs[i - 1]
+            # print("z: ", zs[i], "left: ", rs[i - 1] + zs[i - 1] - rs[i], "right: ", rz)
+            zs[i] = np.random.uniform(rs[i - 1] + zs[i - 1] - rs[i], rz)
+            # print("z: ", zs[i], "left: ", rs[i - 1] + zs[i - 1] - rs[i], "right: ", rz)
+
+    return multifocal(rs[::-1], zs[::-1])
+
+
 def offset(z1, z2, pnt, sprl_flg):
     if sprl_flg != 1:
         v_offset = (np.average(z1[0, :]) + np.average(z1[pnt - 1, :]) +
@@ -117,7 +139,9 @@ z = multifocal([1, 3], [0.8, -1.5])
 # z = spiral(3, 1, X, Y)
 # z = gauss(X, Y)
 
-z = add_noise(z, 0.01, N)
+z = generate_random_multifocal()
+
+# z = add_noise(z, 0.01, N)
 
 z_approx = method_v(z, N, np.pi, 0, gamma=0.5)
 

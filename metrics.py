@@ -17,14 +17,14 @@ arr_ssim_stb_75 = np.zeros(40)
 arr_mse_stb_g = np.zeros(40)
 arr_ssim_stb_g = np.zeros(40)
 
-gamma_center = 0.4231414893578323
-gamma_middle1 = 0.7328285777195578
-gamma_middle2 = 0.7377835998820123
-gamma_side = 0.43422662583708616
+gamma_center = 0.3503128025624347
+gamma_middle1 = 0.4214517768191933
+gamma_middle2 = 0.6134753952099001
+gamma_side = 0.42702833893284037
 
 gammas = fill_gammas([gamma_center, gamma_middle1, gamma_middle2], [8, 15, 25], gamma_side, N)
 
-for ind, el in enumerate(np.linspace(0.0, 0.1, num=40)):
+for ind, el in enumerate(np.linspace(0.0, 0.2, num=40)):
     mse_avg = 0
     mse_avg_stb_5 = 0
     mse_avg_stb_75 = 0
