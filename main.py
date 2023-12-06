@@ -83,15 +83,19 @@ def spiral(f0, f1, x, y):
 
 
 def generate_random_multifocal():
-    n = np.random.randint(2, 5)
-    n= 4
+    n = np.random.randint(2, 6)
 
     hr = 3
 
     rs = np.zeros(n)
     zs = np.zeros(n)
+
     for i in range(n):
-        rs[i] = np.random.uniform(0.7, hr)
+        if i == 0:
+            rs[i] = np.random.uniform(2, hr)
+        else:
+            rs[i] = np.random.uniform(0.7, hr)
+
         hr = rs[i]
         if i == 0:
             zs[i] = np.random.uniform(-rs[i], 0)
@@ -102,6 +106,38 @@ def generate_random_multifocal():
             # print("z: ", zs[i], "left: ", rs[i - 1] + zs[i - 1] - rs[i], "right: ", rz)
 
     return multifocal(rs[::-1], zs[::-1])
+
+
+def generate_random_multifocal_razr():
+    n = np.random.randint(2, 6)
+
+    hr = 3
+
+    rs = np.zeros(n)
+    zs = np.zeros(n)
+    r2s = np.zeros(n + 1)
+
+    for i in range(n):
+        if i == 0:
+            rs[i] = np.random.uniform(2, hr)
+            r2s[i] = np.random.uniform(2, rs[i])
+        else:
+            rs[i] = np.random.uniform(0.7, hr)
+            r2s[i] = np.random.uniform(0.7, rs[i])
+
+        hr = r2s[i]
+
+        if i == 0:
+            zs[i] = np.random.uniform(-rs[i], 0)
+        else:
+            rz = np.sqrt(rs[i - 1] ** 2 - rs[i] ** 2) + zs[i - 1]
+            # print("z: ", zs[i], "left: ", rs[i - 1] + zs[i - 1] - rs[i], "right: ", rz)
+            zs[i] = np.random.uniform(rs[i - 1] + zs[i - 1] - rs[i], rz)
+            # print("z: ", zs[i], "left: ", rs[i - 1] + zs[i - 1] - rs[i], "right: ", rz)
+
+    r2s[n] = 0
+
+    return multifocal_razr(rs[::-1], zs[::-1], r2s[::-1])
 
 
 def offset(z1, z2, pnt, sprl_flg):
@@ -139,7 +175,7 @@ z = multifocal([1, 3], [0.8, -1.5])
 # z = spiral(3, 1, X, Y)
 # z = gauss(X, Y)
 
-z = generate_random_multifocal()
+# z = generate_random_multifocal_razr()
 
 # z = add_noise(z, 0.01, N)
 
