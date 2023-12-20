@@ -170,9 +170,9 @@ def gauss(x, y):
 
 
 # z = multifocal([1, 3, 12], [0.8, -1.5, -11])
-z = multifocal([1, 3], [0.8, -1.5])
+# z = multifocal([1, 3], [0.8, -1.5])
 # z = multifocal_razr([np.sqrt(3), 3], [0.8, -1.5], [0, 1, 3])
-# z = spiral(3, 1, X, Y)
+z = spiral(3, 1, X, Y)
 # z = gauss(X, Y)
 
 # z = generate_random_multifocal_razr()
@@ -181,7 +181,7 @@ z = multifocal([1, 3], [0.8, -1.5])
 
 z_approx = method_v(z, N, np.pi, 0, gamma=0.5)
 
-spiral_flag = 0
+spiral_flag = 1
 
 offs = offset(z_approx, z, N, spiral_flag)
 
@@ -199,18 +199,24 @@ def prepare_for_visual(X1, Y1, Z1):
     return Z2
 
 
+fig1, ax = plt.subplots(subplot_kw={"projection": "3d"})
+surf2 = ax.plot_surface(X, Y, prepare_for_visual(X, Y, z), cmap='plasma')
+ax.set_title('Spiral')
+ax.view_init(45, 60)
+plt.show()
+
 fig = plt.figure()
 ax = fig.add_subplot(121, projection='3d')
 surf1 = ax.plot_surface(X, Y, prepare_for_visual(X, Y, z), cmap='plasma')
 ax.set_title('Original function')
 # ax.set_zlim([0, np.max(fm)])
-ax.view_init(45, 60)
+ax.view_init(30, -120)
 # fig.colorbar(surf1, location='bottom', shrink=0.6, aspect=7)
 
 ax = fig.add_subplot(122, projection='3d')
 surf2 = ax.plot_surface(X, Y, prepare_for_visual(X, Y, z_approx - offs), cmap='plasma')
 ax.set_title('Method approximation')
 # ax.set_zlim([0, np.max((z_approx - offs))])
-ax.view_init(45, 60)
+ax.view_init(30, -120)
 # fig.colorbar(surf2, location='bottom', shrink=0.6, aspect=7)
 plt.show()

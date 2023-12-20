@@ -1,6 +1,5 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from main import z, z_approx, X, Y, N, fm, z4, Xd2, Yd2
 
 EPS = 0.5
 

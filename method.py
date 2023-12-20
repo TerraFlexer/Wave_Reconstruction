@@ -68,7 +68,7 @@ def fill_gammas(gamma_values, rad_values, gamma_side, pnt_cnt):
                     r1 = 0
                 else:
                     r1 = rad_values[k - 1]
-                if r1 ** 2 < (pnt_cnt // 2 - 1 - i) ** 2 + (pnt_cnt // 2 - 1 - j) ** 2 <= r2 ** 2:
+                if r1 ** 2 <= (pnt_cnt // 2 - 1 - i) ** 2 + (pnt_cnt // 2 - 1 - j) ** 2 <= r2 ** 2:
                     gammas[i][j] = gamma_values[k]
 
     return gammas
