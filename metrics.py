@@ -2,10 +2,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 from skimage.metrics import structural_similarity as ssim
 from skimage.metrics import mean_squared_error as mse
-from main import add_noise, spiral, Edge, N, spiral_flag, multifocal, offset
+import functions_package as fpckg
 from method import method_v, fill_gammas
-from splines import spline_approximation, spline_coefficients
-import finit_module as fmd
+from splines import spline_approximation
+
+
+N = fpckg.N
 
 arr_perc = np.zeros(40)
 arr_mse = np.zeros(40)
@@ -34,19 +36,19 @@ for ind, el in enumerate(np.linspace(0.0, 0.2, num=40)):
     mse_avg_stb_g = 0
     ssim_avg_stb_g = 0
     # Инициализируем сетку
-    x = np.linspace(-Edge, Edge, N, endpoint=False)
-    y = np.linspace(-Edge, Edge, N, endpoint=False)
+    x = np.linspace(-fpckg.Edge, fpckg.Edge, N, endpoint=False)
+    y = np.linspace(-fpckg.Edge, fpckg.Edge, N, endpoint=False)
     Y, X = np.meshgrid(x, y)
 
     # Считаем исходную мультифокальную/спиральную функцию
-    if spiral_flag:
-        z_src = spiral(3, 1, X, Y)
+    if fpckg.spiral_flag:
+        z_src = fpckg.spiral(3, 1, X, Y)
     else:
-        z_src = multifocal([1, 3], [0.8, -1.5])
+        z_src = fpckg.multifocal([1, 3], [0.8, -1.5])
 
     for i in range(5):
         # Добавляем шум к исходному фронту
-        z = add_noise(z_src, el, N)
+        z = fpckg.add_noise(z_src, el, N)
 
         u_res = method_v(z, N, np.pi, 0)
         u_res_stb_5 = method_v(z, N, np.pi, 1, 0.5)
@@ -58,10 +60,10 @@ for ind, el in enumerate(np.linspace(0.0, 0.2, num=40)):
         z_approx_stb_75 = spline_approximation(u_res_stb_75.real, X, Y, N)
         z_approx_stb_g = spline_approximation(u_res_stb_g.real, X, Y, N)
 
-        offs = offset(z_approx, z_src, N, spiral_flag)
-        offs_stb_5 = offset(z_approx_stb_5, z_src, N, spiral_flag)
-        offs_stb_75 = offset(z_approx_stb_75, z_src, N, spiral_flag)
-        offs_stb_g = offset(z_approx_stb_g, z_src, N, spiral_flag)
+        offs = fpckg.offset(z_approx, z_src, N, fpckg.spiral_flag)
+        offs_stb_5 = fpckg.offset(z_approx_stb_5, z_src, N, fpckg.spiral_flag)
+        offs_stb_75 = fpckg.offset(z_approx_stb_75, z_src, N, fpckg.spiral_flag)
+        offs_stb_g = fpckg.offset(z_approx_stb_g, z_src, N, fpckg.spiral_flag)
 
         mse_avg += mse(z_src, z_approx - offs)
         mse_avg_stb_5 += mse(z_src, z_approx_stb_5 - offs_stb_5)

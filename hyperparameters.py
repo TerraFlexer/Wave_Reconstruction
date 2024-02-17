@@ -1,12 +1,11 @@
 import optuna
 import numpy as np
-from method import method_v, fill_gammas
-from main import spiral, Edge, N, add_noise, multifocal, offset, generate_random_multifocal
-from skimage.metrics import mean_squared_error as mse
-from skimage.metrics import structural_similarity as ssim
-from scipy.special import kl_div
-from scipy.fft import fft2, ifft2, fftshift, ifftshift
+from method import fill_gammas
 import matplotlib.pyplot as plt
+import functions_package as fpckg
+
+
+N = fpckg.N
 
 
 def objective(trial):
@@ -17,33 +16,9 @@ def objective(trial):
 
     gammas = fill_gammas([gamma_center, gamma_middle1, gamma_middle2], [8, 15, 25], gamma_side, N)
 
-    x = np.linspace(-Edge, Edge, N, endpoint=False)
-    y = np.linspace(-Edge, Edge, N, endpoint=False)
-    Y, X = np.meshgrid(x, y)
+    result = fpckg.perform_trial(gammas)
 
-    accuracy = 0
-    ssim_accuracy = 0
-    kl_divergence = 0
-
-    for el in enumerate(np.linspace(0.0, 0.05, num=5)):
-        for i in range(5):
-            z = generate_random_multifocal()
-
-            z1 = add_noise(z, 0.15, N)
-
-            z_approx = method_v(z1, N, Edge, 1, gammas)
-
-            offs = offset(z_approx, z, N, 0)
-
-            accuracy += mse(z, z_approx - offs)
-
-            ssim_accuracy += (1 - ssim(z, z_approx - offs,
-                                   data_range=max(np.max(z), np.max(z_approx - offs)) -
-                                              min(np.min(z), np.min(z_approx - offs)))) / 2
-
-            kl_divergence += np.sum(kl_div(z + 5, z_approx - offs + 5))
-
-    return kl_divergence + accuracy + ssim_accuracy
+    return result
 
 
 # 3. Create a study object and optimize the objective function.
