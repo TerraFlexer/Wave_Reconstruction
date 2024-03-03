@@ -34,18 +34,4 @@ gamma_side = study.best_params[f"gamma_side"]
 
 gammas = fill_gammas([gamma_center, gamma_middle1, gamma_middle2], [8, 15, 25], gamma_side, N)
 
-x = np.linspace(0, N - 1, N, endpoint=False)
-y = np.linspace(0, N - 1, N, endpoint=False)
-Y, X = np.meshgrid(x, y)
-
-fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
-surf1 = ax.plot_surface(X, Y, gammas, cmap='plasma')
-ax.set_title('gammas')
-ax.view_init(45, 60)
-plt.show()
-
-fig1, ax = plt.subplots(subplot_kw={"projection": "3d"})
-surf2 = ax.plot_surface(X, Y, gammas, cmap='plasma')
-ax.set_title('gammas')
-ax.view_init(90, 0)
-plt.show()
+fpckg.visualaize_param_matrix(gammas)

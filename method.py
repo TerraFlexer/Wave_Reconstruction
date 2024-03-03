@@ -4,7 +4,13 @@ from splines import spline_coefficients
 from splines import spline_approximation
 
 
-def prepare_data(pnt_cnt, gamma=0.75):  # Инициализация всех данных
+def init_net(pnt_cnt, edge):
+    x = np.linspace(-edge, edge, pnt_cnt, endpoint=False)
+    y = np.linspace(-edge, edge, pnt_cnt, endpoint=False)
+    Y, X = np.meshgrid(x, y)
+    return Y, X
+
+def prepare_data(pnt_cnt, gamma=0.75, s=0.5):  # Инициализация всех данных
     h = 2 * np.pi / pnt_cnt
 
     I = []
@@ -18,7 +24,7 @@ def prepare_data(pnt_cnt, gamma=0.75):  # Инициализация всех д
         mus[el + pnt_cnt // 2] = 1 - (h * h / 6) * lambds[el + pnt_cnt // 2]
 
     gammas = np.ones((pnt_cnt, pnt_cnt)) * gamma
-    ss = np.ones((pnt_cnt, pnt_cnt)) * 0.5
+    ss = np.ones((pnt_cnt, pnt_cnt)) * s
 
     Lambd1 = np.zeros((pnt_cnt, pnt_cnt))
     Lambd2 = np.zeros((pnt_cnt, pnt_cnt))
@@ -134,56 +140,77 @@ def method_count(f_kl, pnt_cnt, lambds, mus, gammas, ss, st_stb):  # Функц�
     return u_kl
 
 
-def continue_even(z):
-    cnt = np.shape(z)[0] * 2
-    z4 = np.zeros((cnt, cnt))
-    z4[:cnt // 2, :cnt // 2] = z
-    z4[:cnt // 2, cnt // 2:] = np.flip(z, 1)
-    z4[cnt // 2:, :cnt // 2] = np.flip(z, 0)
-    z4[cnt // 2:, cnt // 2:] = np.flip(z)
-    return z4
+def help_exp_dev(pnt_cnt):
+    return np.exp(2 * np.pi)
 
 
-def continue_even_dx(z):
-    cnt = np.shape(z)[0] * 2
-    z4 = np.zeros((cnt, cnt))
-    z4[:cnt // 2, :cnt // 2] = z
-    z4[:cnt // 2, cnt // 2:] = np.flip(z, 1)
-    z4[cnt // 2:, :cnt // 2] = -z
-    z4[cnt // 2:, cnt // 2:] = -np.flip(z, 1)
-    return z4
+def dev_gamma(gammas, ss, z, pnt_cnt, edge):
+    f_kl = count_f_kl(z, pnt_cnt, edge, gammas, ss)
+    f_mn = fft2(fftshift(f_kl))
+
+    lambds, mus, gammas, ss, B1, B2, G1, G2 = prepare_data(pnt_cnt, gammas, ss)
+
+    znam1 = np.dot(lambds.reshape(pnt_cnt, -1), mus.reshape(1, -1)) + np.dot(mus.reshape(pnt_cnt, -1),
+                                                                            lambds.reshape(1, -1))
+
+    drob_stab = gammas * np.power(np.dot(lambds.reshape(pnt_cnt, -1), lambds.reshape(1, -1)), ss)
+
+    drob_stab2 = np.power(np.dot(lambds.reshape(pnt_cnt, -1), lambds.reshape(1, -1)), ss)
+
+    chisl = -f_mn * drob_stab2
+
+    znam = (znam1 + drob_stab) ** 2
+
+    return chisl / znam
 
 
-def continue_even_dy(z):
-    cnt = np.shape(z)[0] * 2
-    z4 = np.zeros((cnt, cnt))
-    z4[:cnt // 2, :cnt // 2] = z
-    z4[:cnt // 2, cnt // 2:] = -np.flip(z, 0)
-    z4[cnt // 2:, :cnt // 2] = np.flip(z, 0)
-    z4[cnt // 2:, cnt // 2:] = -z
-    return z4
+def dev_ss(gammas, ss, z, pnt_cnt, edge):
+    f_kl = count_f_kl(z, pnt_cnt, edge, gammas, ss)
+    f_mn = fft2(fftshift(f_kl))
+
+    lambds, mus, gammas, ss, B1, B2, G1, G2 = prepare_data(pnt_cnt, gammas, ss)
+
+    znam1 = np.dot(lambds.reshape(pnt_cnt, -1), mus.reshape(1, -1)) + np.dot(mus.reshape(pnt_cnt, -1),
+                                                                             lambds.reshape(1, -1))
+
+    drob_stab = gammas * np.power(np.dot(lambds.reshape(pnt_cnt, -1), lambds.reshape(1, -1)), ss)
+
+    chisl = -f_mn * drob_stab * np.log(np.dot(lambds.reshape(pnt_cnt, -1), lambds.reshape(1, -1)))
+
+    znam = (znam1 + drob_stab) ** 2
+
+    return chisl / znam
 
 
-def method_v(z, pnt_cnt, edge, st_stb, gamma=0.75):  # Общая обертка метода
-
+def count_f_kl(z, pnt_cnt, edge, gamma, s):
     # Вычисляем матрицы производных
     dx = fx(z, pnt_cnt, edge)
     dy = fy(z, pnt_cnt, edge)
 
     # Инициализируем сетку
-    x = np.linspace(-edge, edge, pnt_cnt, endpoint=False)
-    y = np.linspace(-edge, edge, pnt_cnt, endpoint=False)
-    Y, X = np.meshgrid(x, y)
+    Y, X = init_net(pnt_cnt, edge)
 
     # Вычисляем матрицы производных по направлению функции и раскладываем их по базису сплайнов
     matrix_g1 = spline_coefficients(dx, pnt_cnt, X, Y)
     matrix_g2 = spline_coefficients(dy, pnt_cnt, X, Y)
 
     # Вычисляем необходимые для работы метода матрицы
-    lambds, mus, gammas, ss, B1, B2, G1, G2 = prepare_data(pnt_cnt, gamma)
+    lambds, mus, gammas, ss, B1, B2, G1, G2 = prepare_data(pnt_cnt, gamma, s)
 
     # Вычисляем правую часть уравнения
     f_kl = affect_rows(B2, np.dot(G1, matrix_g1)) + np.dot(B1, affect_rows(G2, matrix_g2))
+
+    return f_kl
+
+def method_v(z, pnt_cnt, edge, st_stb, gamma=0.75, s=0.5):  # Общая обертка метода
+    # Инициализируем сетку
+    Y, X = init_net(pnt_cnt, edge)
+
+    # Вычисляем необходимые для работы метода матрицы
+    lambds, mus, gammas, ss, B1, B2, G1, G2 = prepare_data(pnt_cnt, gamma)
+
+    # Вычисляем правую часть уравнения
+    f_kl = count_f_kl(z, pnt_cnt, edge, gamma, s)
 
     # Запускаем вычисление самого метода
     u_res = method_count(f_kl, pnt_cnt, lambds, mus, gammas, ss, st_stb)

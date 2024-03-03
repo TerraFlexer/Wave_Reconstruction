@@ -3,6 +3,7 @@ from method import method_v
 from skimage.metrics import structural_similarity as ssim
 from skimage.metrics import mean_squared_error as mse
 from scipy.special import kl_div
+import matplotlib.pyplot as plt
 
 
 N = 64
@@ -177,6 +178,24 @@ def perform_trial(gammas, cnt_noise=5, cnt_in_noise=5):
             kl_divergence += np.sum(kl_div(z + 5, z_approx - offs + 5))
 
     return (kl_divergence + accuracy + ssim_accuracy) / (cnt_noise * cnt_in_noise)
+
+
+def visualaize_param_matrix(param):
+    x = np.linspace(0, N - 1, N, endpoint=False)
+    y = np.linspace(0, N - 1, N, endpoint=False)
+    Y, X = np.meshgrid(x, y)
+
+    fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+    surf1 = ax.plot_surface(X, Y, param, cmap='plasma')
+    ax.set_title('gammas')
+    ax.view_init(45, 60)
+    plt.show()
+
+    fig1, ax = plt.subplots(subplot_kw={"projection": "3d"})
+    surf2 = ax.plot_surface(X, Y, param, cmap='plasma')
+    ax.set_title('gammas')
+    ax.view_init(90, 0)
+    plt.show()
 
 
 def prepare_for_visual(X1, Y1, Z1):

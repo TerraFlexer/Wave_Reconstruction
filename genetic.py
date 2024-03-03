@@ -77,6 +77,10 @@ def life_cycle(eps=3, epochs=30, mutation_prob=0.08):
     best_scores = np.zeros(epochs)
     glbl_gamma_scores = np.zeros(epochs)
 
+    # Variables for saving best score and best gamma
+    best_score = 20
+    best_gamma = np.ones((N, N)) * 0.5
+
     for i in range(epochs):
         print("Epoch " + str(i))
 
@@ -89,6 +93,11 @@ def life_cycle(eps=3, epochs=30, mutation_prob=0.08):
         # Counting avg and best scores for graphs
         avg_scores[i] = np.average(scores)
         best_scores[i] = np.min(scores)
+
+        # Updating the best gamma if necessary
+        if np.min(scores) < best_score:
+            best_score = np.min(scores)
+            best_gamma = generation[np.argmin(scores)]
 
         # Finding 6 best specimen and printing their results
         best6 = np.argpartition(scores, 6)[:6]
@@ -122,7 +131,13 @@ def life_cycle(eps=3, epochs=30, mutation_prob=0.08):
         print("\n")
 
     print("Life Cycle ended")
+    # Visualize graphs through lifetime
     scores_plot(epochs, avg_scores, best_scores, glbl_gamma_scores)
+
+    # Visualaize best_gamma
+    fpckg.visualaize_param_matrix(best_gamma)
+    # Сюда бы дописать еще perform_trial, но чтобы он отрисовывал графики, для этого надо его доработать
+    # что - то типа передачи флага для визаулизации. По дефолту без отрисовки
 
 
 life_cycle()
