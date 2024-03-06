@@ -138,6 +138,7 @@ def life_cycle(eps=3, epochs=30, mutation_prob=0.08):
     fpckg.visualaize_param_matrix(best_gamma)
     # Сюда бы дописать еще perform_trial, но чтобы он отрисовывал графики, для этого надо его доработать
     # что - то типа передачи флага для визаулизации. По дефолту без отрисовки
+    fpckg.perform_trial(best_gamma, 10, 3, 1, 'best_genetic_gamma')
 
 
 life_cycle()

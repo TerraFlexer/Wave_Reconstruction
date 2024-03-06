@@ -149,33 +149,61 @@ def generate_random_multifocal_razr(X, Y):
     return multifocal_razr(rs[::-1], zs[::-1], r2s[::-1], X, Y)
 
 
-def perform_trial(gammas, cnt_noise=5, cnt_in_noise=5):
+def perform_trial(gammas, cnt_noise=5, cnt_in_noise=5, visual_flag=0, name='No name'):
     accuracy = 0
     ssim_accuracy = 0
     kl_divergence = 0
+
+    mse_arr = np.zeros(cnt_noise)
+    ssim_arr = np.zeros(cnt_noise)
+    kl_div_arr = np.zeros(cnt_noise)
+
+    perc_arr = np.zeros(cnt_noise)
 
     # Инициализируем сетку
     x = np.linspace(-Edge, Edge, N, endpoint=False)
     y = np.linspace(-Edge, Edge, N, endpoint=False)
     Y, X = np.meshgrid(x, y)
 
-    for el in enumerate(np.linspace(0.0, 0.05, num=cnt_noise)):
+    for ind, el in enumerate(np.linspace(0.0, 0.1, num=cnt_noise)):
+        accuracy_tmp = 0
+        ssim_accuracy_tmp = 0
+        kl_divergence_tmp = 0
         for i in range(cnt_in_noise):
             z = generate_random_multifocal(X, Y)
 
-            z1 = add_noise(z, 0.15, N)
+            z1 = add_noise(z, el, N)
 
             z_approx = method_v(z1, N, Edge, 1, gammas)
 
             offs = offset(z_approx, z, N, 0)
 
-            accuracy += mse(z, z_approx - offs)
+            accuracy_tmp += mse(z, z_approx - offs)
 
-            ssim_accuracy += (1 - ssim(z, z_approx - offs,
+            ssim_accuracy_tmp += (1 - ssim(z, z_approx - offs,
                                        data_range=max(np.max(z), np.max(z_approx - offs)) -
                                                   min(np.min(z), np.min(z_approx - offs)))) / 2
 
-            kl_divergence += np.sum(kl_div(z + 5, z_approx - offs + 5))
+            kl_divergence_tmp += np.sum(kl_div(z + 5, z_approx - offs + 5))
+
+        mse_arr[ind] = accuracy_tmp / cnt_in_noise
+        ssim_arr[ind] = ssim_accuracy_tmp / cnt_in_noise
+        kl_div_arr[ind] = kl_divergence_tmp / cnt_in_noise
+
+        perc_arr[ind] = el
+
+        accuracy += accuracy_tmp
+        ssim_accuracy += ssim_accuracy_tmp
+        kl_divergence += kl_divergence_tmp
+
+    if visual_flag:
+        plt.plot(perc_arr, mse_arr, label='MSE')
+        plt.plot(perc_arr, ssim_arr, label='SSIM')
+        plt.plot(perc_arr, kl_div_arr, label='Kl_div')
+        plt.ylabel("Metrics" + name)
+        plt.xlabel("Шум(доля от максимального значения)")
+        plt.legend()
+        plt.show()
 
     return (kl_divergence + accuracy + ssim_accuracy) / (cnt_noise * cnt_in_noise)
 
