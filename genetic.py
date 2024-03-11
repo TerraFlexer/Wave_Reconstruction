@@ -1,6 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import functions_package as fpckg
+from method import fill_gammas
+from metrics import count_metrics
 
 N = fpckg.N
 
@@ -14,7 +16,36 @@ def initiation():
     first_gen = np.zeros((generation_size, N, N))
 
     for i in range(generation_size):
-        first_gen[i] = center + ampl * np.random.randn(N, N)
+        # first_gen[i] = center + ampl * np.random.randn(N, N)
+        gamma_center = center + ampl * np.random.randn()
+        gamma_middle1 = center + ampl * np.random.randn()
+        gamma_middle2 = center + ampl * np.random.randn()
+        gamma_side = center + ampl * np.random.randn()
+
+        first_gen[i] = fill_gammas([gamma_center, gamma_middle1, gamma_middle2], [8, 15, 25], gamma_side, N)
+
+    x = np.linspace(0, N - 1, N, endpoint=False)
+    y = np.linspace(0, N - 1, N, endpoint=False)
+    Y, X = np.meshgrid(x, y)
+
+    fig = plt.figure()
+    ax = fig.add_subplot(221, projection='3d')
+    surf1 = ax.plot_surface(X, Y, first_gen[0], cmap='plasma')
+    ax.view_init(45, 60)
+
+    ax = fig.add_subplot(222, projection='3d')
+    surf1 = ax.plot_surface(X, Y, first_gen[5], cmap='plasma')
+    ax.view_init(45, 60)
+
+    ax = fig.add_subplot(223, projection='3d')
+    surf1 = ax.plot_surface(X, Y, first_gen[10], cmap='plasma')
+    ax.view_init(45, 60)
+
+    ax = fig.add_subplot(224, projection='3d')
+    surf1 = ax.plot_surface(X, Y, first_gen[15], cmap='plasma')
+    ax.view_init(45, 60)
+
+    plt.show()
 
     return first_gen
 
@@ -136,9 +167,9 @@ def life_cycle(eps=3, epochs=30, mutation_prob=0.08):
 
     # Visualaize best_gamma
     fpckg.visualaize_param_matrix(best_gamma)
-    # Сюда бы дописать еще perform_trial, но чтобы он отрисовывал графики, для этого надо его доработать
-    # что - то типа передачи флага для визаулизации. По дефолту без отрисовки
-    fpckg.perform_trial(best_gamma, 10, 3, 1, 'best_genetic_gamma')
+
+    # Count and visualaize metrics for best_gamma
+    count_metrics(best_gamma)
 
 
 life_cycle()
