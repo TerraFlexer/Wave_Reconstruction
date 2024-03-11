@@ -140,8 +140,8 @@ def method_count(f_kl, pnt_cnt, lambds, mus, gammas, ss, st_stb):  # Функц�
     return u_kl
 
 
-def help_exp_dev(pnt_cnt):
-    return np.exp(2 * np.pi)
+def help_exp_dev(f):
+    return ifftshift(ifft2(f))
 
 
 def dev_gamma(gammas, ss, z, pnt_cnt, edge):
@@ -161,7 +161,7 @@ def dev_gamma(gammas, ss, z, pnt_cnt, edge):
 
     znam = (znam1 + drob_stab) ** 2
 
-    return chisl / znam
+    return help_exp_dev(chisl / znam)
 
 
 def dev_ss(gammas, ss, z, pnt_cnt, edge):
@@ -179,7 +179,7 @@ def dev_ss(gammas, ss, z, pnt_cnt, edge):
 
     znam = (znam1 + drob_stab) ** 2
 
-    return chisl / znam
+    return help_exp_dev(chisl / znam)
 
 
 def count_f_kl(z, pnt_cnt, edge, gamma, s):
