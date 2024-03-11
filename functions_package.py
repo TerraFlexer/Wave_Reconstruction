@@ -169,8 +169,10 @@ def perform_trial(gammas, cnt_noise=5, cnt_in_noise=5, visual_flag=0, name='No n
         accuracy_tmp = 0
         ssim_accuracy_tmp = 0
         kl_divergence_tmp = 0
+
+        z = generate_random_multifocal(X, Y)
+
         for i in range(cnt_in_noise):
-            z = generate_random_multifocal(X, Y)
 
             z1 = add_noise(z, el, N)
 
@@ -198,9 +200,19 @@ def perform_trial(gammas, cnt_noise=5, cnt_in_noise=5, visual_flag=0, name='No n
 
     if visual_flag:
         plt.plot(perc_arr, mse_arr, label='MSE')
+        plt.ylabel("MSE" + name)
+        plt.xlabel("Шум(доля от максимального значения)")
+        plt.legend()
+        plt.show()
+
         plt.plot(perc_arr, ssim_arr, label='SSIM')
+        plt.ylabel("SSIM" + name)
+        plt.xlabel("Шум(доля от максимального значения)")
+        plt.legend()
+        plt.show()
+
         plt.plot(perc_arr, kl_div_arr, label='Kl_div')
-        plt.ylabel("Metrics" + name)
+        plt.ylabel("Kl_div" + name)
         plt.xlabel("Шум(доля от максимального значения)")
         plt.legend()
         plt.show()
@@ -208,20 +220,20 @@ def perform_trial(gammas, cnt_noise=5, cnt_in_noise=5, visual_flag=0, name='No n
     return (kl_divergence + accuracy + ssim_accuracy) / (cnt_noise * cnt_in_noise)
 
 
-def visualaize_param_matrix(param):
+def visualaize_param_matrix(param, name='param'):
     x = np.linspace(0, N - 1, N, endpoint=False)
     y = np.linspace(0, N - 1, N, endpoint=False)
     Y, X = np.meshgrid(x, y)
 
     fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
     surf1 = ax.plot_surface(X, Y, param, cmap='plasma')
-    ax.set_title('gammas')
+    ax.set_title(name)
     ax.view_init(45, 60)
     plt.show()
 
     fig1, ax = plt.subplots(subplot_kw={"projection": "3d"})
     surf2 = ax.plot_surface(X, Y, param, cmap='plasma')
-    ax.set_title('gammas')
+    ax.set_title(name)
     ax.view_init(90, 0)
     plt.show()
 
