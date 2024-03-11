@@ -46,7 +46,7 @@ def count_metrics(gammas):
         if fpckg.spiral_flag:
             z_src = fpckg.spiral(3, 1, X, Y)
         else:
-            z_src = fpckg.multifocal([1, 3], [0.8, -1.5])
+            z_src = fpckg.multifocal([1, 3], [0.8, -1.5], X, Y)
 
         for i in range(5):
             # Добавляем шум к исходному фронту

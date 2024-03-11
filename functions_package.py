@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 
 N = 64
 Edge = np.pi
-spiral_flag = 1
+spiral_flag = 0
 
 
 def multifocal(Rs, Zs, X, Y):
