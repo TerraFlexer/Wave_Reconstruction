@@ -10,6 +10,7 @@ def init_net(pnt_cnt, edge):
     Y, X = np.meshgrid(x, y)
     return Y, X
 
+
 def prepare_data(pnt_cnt, gamma=0.75, s=0.5):  # Инициализация всех данных
     h = 2 * np.pi / pnt_cnt
 
@@ -150,8 +151,8 @@ def dev_gamma(gammas, ss, z, pnt_cnt, edge):
 
     lambds, mus, gammas, ss, B1, B2, G1, G2 = prepare_data(pnt_cnt, gammas, ss)
 
-    znam1 = np.dot(lambds.reshape(pnt_cnt, -1), mus.reshape(1, -1)) + np.dot(mus.reshape(pnt_cnt, -1),
-                                                                            lambds.reshape(1, -1))
+    znam_orig = np.dot(lambds.reshape(pnt_cnt, -1), mus.reshape(1, -1)) + np.dot(mus.reshape(pnt_cnt, -1),
+                                                                                 lambds.reshape(1, -1))
 
     drob_stab = gammas * np.power(np.dot(lambds.reshape(pnt_cnt, -1), lambds.reshape(1, -1)), ss)
 
@@ -159,7 +160,7 @@ def dev_gamma(gammas, ss, z, pnt_cnt, edge):
 
     chisl = -f_mn * drob_stab2
 
-    znam = (znam1 + drob_stab) ** 2
+    znam = (znam_orig + drob_stab) ** 2
 
     return help_exp_dev(chisl / znam)
 
@@ -170,14 +171,14 @@ def dev_ss(gammas, ss, z, pnt_cnt, edge):
 
     lambds, mus, gammas, ss, B1, B2, G1, G2 = prepare_data(pnt_cnt, gammas, ss)
 
-    znam1 = np.dot(lambds.reshape(pnt_cnt, -1), mus.reshape(1, -1)) + np.dot(mus.reshape(pnt_cnt, -1),
-                                                                             lambds.reshape(1, -1))
+    znam_orig = np.dot(lambds.reshape(pnt_cnt, -1), mus.reshape(1, -1)) + np.dot(mus.reshape(pnt_cnt, -1),
+                                                                                 lambds.reshape(1, -1))
 
     drob_stab = gammas * np.power(np.dot(lambds.reshape(pnt_cnt, -1), lambds.reshape(1, -1)), ss)
 
     chisl = -f_mn * drob_stab * np.log(np.dot(lambds.reshape(pnt_cnt, -1), lambds.reshape(1, -1)))
 
-    znam = (znam1 + drob_stab) ** 2
+    znam = (znam_orig + drob_stab) ** 2
 
     return help_exp_dev(chisl / znam)
 
@@ -201,6 +202,7 @@ def count_f_kl(z, pnt_cnt, edge, gamma, s):
     f_kl = affect_rows(B2, np.dot(G1, matrix_g1)) + np.dot(B1, affect_rows(G2, matrix_g2))
 
     return f_kl
+
 
 def method_v(z, pnt_cnt, edge, st_stb, gamma=0.75, s=0.5):  # Общая обертка метода
     # Инициализируем сетку
