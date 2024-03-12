@@ -13,16 +13,16 @@ Y, X = np.meshgrid(x, y)
 
 
 # z = multifocal([1, 3, 12], [0.8, -1.5, -11])
-# z = multifocal([1, 3], [0.8, -1.5])
+z = fpckg.multifocal([1, 3], [0.8, -1.5], X, Y)
 # z = multifocal_razr([np.sqrt(3), 3], [0.8, -1.5], [0, 1, 3])
-z = fpckg.spiral(3, 1, X, Y)
+# z = fpckg.spiral(3, 1, X, Y)
 # z = gauss(X, Y)
 
 # z = generate_random_multifocal_razr()
 
 # z = add_noise(z, 0.01, N)
 
-z_approx = method_v(z, N, np.pi, 0, gamma=0.5)
+z_approx = method_v(z, N, np.pi, 1, gamma=0.5)
 
 offs = fpckg.offset(z_approx, z, N, fpckg.spiral_flag)
 
