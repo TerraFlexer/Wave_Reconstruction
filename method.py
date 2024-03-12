@@ -142,7 +142,7 @@ def method_count(f_kl, pnt_cnt, lambds, mus, gammas, ss, st_stb):  # Функц�
 
 
 def help_exp_dev(f):
-    return ifftshift(ifft2(f))
+    return ifftshift(ifft2(f)).real
 
 
 def dev_gamma(gammas, ss, z, pnt_cnt, edge):
@@ -158,11 +158,19 @@ def dev_gamma(gammas, ss, z, pnt_cnt, edge):
 
     drob_stab2 = np.power(np.dot(lambds.reshape(pnt_cnt, -1), lambds.reshape(1, -1)), ss)
 
-    chisl = -f_mn * drob_stab2
+    chisl = -f_mn * fftshift(drob_stab2)
 
-    znam = (znam_orig + drob_stab) ** 2
+    znam = znam_orig + drob_stab
 
-    return help_exp_dev(chisl / znam)
+    znam[pnt_cnt // 2][pnt_cnt // 2] = 1
+
+    znam = fftshift(znam)
+
+    d = chisl / znam / znam
+
+    d[0][0] = 0
+
+    return help_exp_dev(d)
 
 
 def dev_ss(gammas, ss, z, pnt_cnt, edge):
@@ -176,11 +184,21 @@ def dev_ss(gammas, ss, z, pnt_cnt, edge):
 
     drob_stab = gammas * np.power(np.dot(lambds.reshape(pnt_cnt, -1), lambds.reshape(1, -1)), ss)
 
-    chisl = -f_mn * drob_stab * np.log(np.dot(lambds.reshape(pnt_cnt, -1), lambds.reshape(1, -1)))
+    helps = np.dot(lambds.reshape(pnt_cnt, -1), lambds.reshape(1, -1))
 
-    znam = (znam_orig + drob_stab) ** 2
+    chisl = -f_mn * fftshift(drob_stab * np.log(helps, where=helps != 0))
 
-    return help_exp_dev(chisl / znam)
+    znam = znam_orig + drob_stab
+
+    znam[pnt_cnt // 2][pnt_cnt // 2] = 1
+
+    znam = fftshift(znam)
+
+    d = chisl / znam / znam
+
+    d[0][0] = 0
+
+    return help_exp_dev(d)
 
 
 def count_f_kl(z, pnt_cnt, edge, gamma, s):
