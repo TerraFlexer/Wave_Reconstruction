@@ -57,10 +57,10 @@ def count_metrics(gammas):
             u_res_stb_75 = method_v(z, N, np.pi, 1, 0.75)
             u_res_stb_g = method_v(z, N, np.pi, 1, gammas)
 
-            z_approx = spline_approximation(u_res.real, X, Y, N)
-            z_approx_stb_5 = spline_approximation(u_res_stb_5.real, X, Y, N)
-            z_approx_stb_75 = spline_approximation(u_res_stb_75.real, X, Y, N)
-            z_approx_stb_g = spline_approximation(u_res_stb_g.real, X, Y, N)
+            z_approx = u_res.real
+            z_approx_stb_5 = u_res_stb_5.real
+            z_approx_stb_75 = u_res_stb_75.real
+            z_approx_stb_g = u_res_stb_g.real
 
             offs = fpckg.offset(z_approx, z_src, N, fpckg.spiral_flag)
             offs_stb_5 = fpckg.offset(z_approx_stb_5, z_src, N, fpckg.spiral_flag)
