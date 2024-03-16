@@ -1,4 +1,5 @@
 import numpy as np
+import torch
 from scipy.fft import fft2, ifft2, fftshift, ifftshift
 from splines import spline_coefficients
 from splines import spline_approximation
@@ -11,7 +12,7 @@ def init_net(pnt_cnt, edge):
     return Y, X
 
 
-def prepare_data(pnt_cnt, gamma=0.75, s=0.5):  # Инициализация всех данных
+def prepare_data(pnt_cnt, gamma=0.5, s1=0.5, torch_flag=0):  # Инициализация всех данных
     h = 2 * np.pi / pnt_cnt
 
     I = []
@@ -24,8 +25,12 @@ def prepare_data(pnt_cnt, gamma=0.75, s=0.5):  # Инициализация вс
         lambds[el + pnt_cnt // 2] = (4 / (h * h)) * np.sin(el * h / 2) * np.sin(el * h / 2)
         mus[el + pnt_cnt // 2] = 1 - (h * h / 6) * lambds[el + pnt_cnt // 2]
 
-    gammas = np.ones((pnt_cnt, pnt_cnt)) * gamma
-    ss = np.ones((pnt_cnt, pnt_cnt)) * s
+    if torch_flag:
+        gammas = torch.ones((pnt_cnt, pnt_cnt)) * gamma
+        ss = torch.ones((pnt_cnt, pnt_cnt)) * s1
+    else:
+        gammas = np.ones((pnt_cnt, pnt_cnt)) * gamma
+        ss = np.ones((pnt_cnt, pnt_cnt)) * s1
 
     Lambd1 = np.zeros((pnt_cnt, pnt_cnt))
     Lambd2 = np.zeros((pnt_cnt, pnt_cnt))
@@ -113,15 +118,24 @@ def fy(func, pnt_cnt, edge):  # Частная производная по y
     return (shiftcolumn(func, pnt_cnt - 1) - shiftcolumn(func, 1)) / (2 * d)
 
 
-def method_count(f_kl, pnt_cnt, lambds, mus, gammas, ss, st_stb):  # Функция для вычислений самого метода
+def method_count(f_kl, pnt_cnt, lambds, mus, gammas, ss, st_stb, torch_flag=0):  # Функция для вычислений самого метода
     # Осуществляем сдвиг для корректной работы БДПФ и выполняем БДПФ
-    f_mn = fft2(fftshift(f_kl))
+    if torch_flag:
+        f_kl = torch.from_numpy(f_kl)
+        f_mn = torch.fft.fft2(torch.fft.fftshift(f_kl))
+    else:
+        f_mn = fft2(fftshift(f_kl))
 
     # Вычисляем знаменатель дроби из метода
     znam = np.dot(lambds.reshape(pnt_cnt, -1), mus.reshape(1, -1)) + np.dot(mus.reshape(pnt_cnt, -1),
                                                                             lambds.reshape(1, -1))
+
     # Вычисляем слагаемое дробного стабилизатора
-    drob_stab = gammas * np.power(np.dot(lambds.reshape(pnt_cnt, -1), lambds.reshape(1, -1)), ss)
+    if torch_flag:
+        drob_stab = gammas * np.power(np.dot(lambds.reshape(pnt_cnt, -1), lambds.reshape(1, -1)), ss)
+        znam = torch.from_numpy(znam)
+    else:
+        drob_stab = gammas * np.power(np.dot(lambds.reshape(pnt_cnt, -1), lambds.reshape(1, -1)), ss)
 
     # Прибавляем стабилизатор, если был передан параметр st_stb
     znam += drob_stab * st_stb
@@ -130,112 +144,45 @@ def method_count(f_kl, pnt_cnt, lambds, mus, gammas, ss, st_stb):  # Функц�
     znam[pnt_cnt // 2][pnt_cnt // 2] = 1
 
     # Получаем u_mn
-    u_mn = f_mn / fftshift(znam)
+    if torch_flag:
+        u_mn = f_mn / torch.fft.fftshift(znam)
+    else:
+        u_mn = f_mn / fftshift(znam)
 
     # Возвращаемся к условию нулевого среднего
     u_mn[0][0] = 0
 
     # Выполняем обратное БДПФ
-    u_kl = ifftshift(ifft2(u_mn))
+    if torch_flag:
+        u_kl = torch.fft.ifftshift(torch.fft.ifft2(u_mn))
+    else:
+        u_kl = ifftshift(ifft2(u_mn))
 
     return u_kl
 
 
-def help_exp_dev(f):
-    return ifftshift(ifft2(f)).real
+def method_v(z, pnt_cnt, edge, st_stb, gamma=0.5, s=0.5, torch_flag=0):  # Общая обертка метода
+    # Инициализируем сетку
+    Y, X = init_net(pnt_cnt, edge)
 
-
-def dev_gamma(gammas, ss, z, pnt_cnt, edge):
-    f_kl = count_f_kl(z, pnt_cnt, edge, gammas, ss)
-    f_mn = fft2(fftshift(f_kl))
-
-    lambds, mus, gammas, ss, B1, B2, G1, G2 = prepare_data(pnt_cnt, gammas, ss)
-
-    znam_orig = np.dot(lambds.reshape(pnt_cnt, -1), mus.reshape(1, -1)) + np.dot(mus.reshape(pnt_cnt, -1),
-                                                                                 lambds.reshape(1, -1))
-
-    drob_stab = gammas * np.power(np.dot(lambds.reshape(pnt_cnt, -1), lambds.reshape(1, -1)), ss)
-
-    drob_stab2 = np.power(np.dot(lambds.reshape(pnt_cnt, -1), lambds.reshape(1, -1)), ss)
-
-    chisl = -f_mn * fftshift(drob_stab2)
-
-    znam = znam_orig + drob_stab
-
-    znam[pnt_cnt // 2][pnt_cnt // 2] = 1
-
-    znam = fftshift(znam)
-
-    d = chisl / znam / znam
-
-    d[0][0] = 0
-
-    return help_exp_dev(d)
-
-
-def dev_ss(gammas, ss, z, pnt_cnt, edge):
-    f_kl = count_f_kl(z, pnt_cnt, edge, gammas, ss)
-    f_mn = fft2(fftshift(f_kl))
-
-    lambds, mus, gammas, ss, B1, B2, G1, G2 = prepare_data(pnt_cnt, gammas, ss)
-
-    znam_orig = np.dot(lambds.reshape(pnt_cnt, -1), mus.reshape(1, -1)) + np.dot(mus.reshape(pnt_cnt, -1),
-                                                                                 lambds.reshape(1, -1))
-
-    drob_stab = gammas * np.power(np.dot(lambds.reshape(pnt_cnt, -1), lambds.reshape(1, -1)), ss)
-
-    helps = np.dot(lambds.reshape(pnt_cnt, -1), lambds.reshape(1, -1))
-
-    chisl = -f_mn * fftshift(drob_stab * np.log(helps, where=helps != 0))
-
-    znam = znam_orig + drob_stab
-
-    znam[pnt_cnt // 2][pnt_cnt // 2] = 1
-
-    znam = fftshift(znam)
-
-    d = chisl / znam / znam
-
-    d[0][0] = 0
-
-    return help_exp_dev(d)
-
-
-def count_f_kl(z, pnt_cnt, edge, gamma, s):
     # Вычисляем матрицы производных
     dx = fx(z, pnt_cnt, edge)
     dy = fy(z, pnt_cnt, edge)
-
-    # Инициализируем сетку
-    Y, X = init_net(pnt_cnt, edge)
 
     # Вычисляем матрицы производных по направлению функции и раскладываем их по базису сплайнов
     matrix_g1 = spline_coefficients(dx, pnt_cnt, X, Y)
     matrix_g2 = spline_coefficients(dy, pnt_cnt, X, Y)
 
     # Вычисляем необходимые для работы метода матрицы
-    lambds, mus, gammas, ss, B1, B2, G1, G2 = prepare_data(pnt_cnt, gamma, s)
+    lambds, mus, gammas, ss, B1, B2, G1, G2 = prepare_data(pnt_cnt, gamma, s, torch_flag)
 
     # Вычисляем правую часть уравнения
     f_kl = affect_rows(B2, np.dot(G1, matrix_g1)) + np.dot(B1, affect_rows(G2, matrix_g2))
 
-    return f_kl
-
-
-def method_v(z, pnt_cnt, edge, st_stb, gamma=0.75, s=0.5):  # Общая обертка метода
-    # Инициализируем сетку
-    Y, X = init_net(pnt_cnt, edge)
-
-    # Вычисляем необходимые для работы метода матрицы
-    lambds, mus, gammas, ss, B1, B2, G1, G2 = prepare_data(pnt_cnt, gamma)
-
-    # Вычисляем правую часть уравнения
-    f_kl = count_f_kl(z, pnt_cnt, edge, gamma, s)
-
     # Запускаем вычисление самого метода
-    u_res = method_count(f_kl, pnt_cnt, lambds, mus, gammas, ss, st_stb)
+    u_res = method_count(f_kl, pnt_cnt, lambds, mus, gammas, ss, st_stb, torch_flag)
 
     # Раскладываем Real часть полученной функции и раскладываем ее по базису сплайнов
-    z_approx = spline_approximation(u_res.real, X, Y, pnt_cnt)
+    # z_approx = spline_approximation(u_res.real, X, Y, pnt_cnt)
 
-    return z_approx
+    return u_res.real
