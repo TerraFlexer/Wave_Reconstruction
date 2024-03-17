@@ -83,17 +83,21 @@ for i in range(epochs):
         cur_loss5 += loss5.item()
 
     # printing the values for understanding
-    if i % 20 == 0:
+    if i % 20 == 0 and i != 0:
         epoch_arr.append(i)
-        losses.append(cur_loss / batch_size / 20)
-        losses5.append(cur_loss5 / batch_size / 20)
 
-        cur_loss = 0
-        cur_loss5 = 0
+        cur_loss /= batch_size * 20
+        cur_loss5 /= batch_size * 20
+
+        losses.append(cur_loss)
+        losses5.append(cur_loss5)
 
         pred5 = torch.from_numpy(method_v(u_org, N, Edge, 1, 0.5))
         loss5 = criterion(pred5, u_org)
-        print('{}. \t{} \t{}'.format(i, losses[i], losses5[i]))
+        print('{}. \t{} \t{}'.format(i, cur_loss, cur_loss5))
+
+        cur_loss = 0
+        cur_loss5 = 0
 
 plt.plot(epoch_arr, losses, label='Loss gamma')
 plt.plot(epoch_arr, losses5, label='Loss 0.5')
