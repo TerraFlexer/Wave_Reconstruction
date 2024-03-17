@@ -4,6 +4,7 @@ from skimage.metrics import structural_similarity as ssim
 from skimage.metrics import mean_squared_error as mse
 from scipy.special import kl_div
 import matplotlib.pyplot as plt
+import torch
 
 
 N = 64
@@ -81,12 +82,19 @@ def add_noise(z, perc, N):
     return z + ampl * np.random.randn(N, N)
 
 
-def offset(z1, z2, pnt, sprl_flg):
+def offset(z1, z2, pnt, sprl_flg, torch_flag=0):
     if sprl_flg != 1:
-        v_offset = (np.average(z1[0, :]) + np.average(z1[pnt - 1, :]) +
-                    np.average(z1[:, 0]) + np.average(z1[:, pnt - 1])) / 4
+        if torch_flag:
+            v_offset = (torch.mean(z1[0, :]) + torch.mean(z1[pnt - 1, :]) +
+                        torch.mean(z1[:, 0]) + torch.mean(z1[:, pnt - 1])) / 4
+        else:
+            v_offset = (np.average(z1[0, :]) + np.average(z1[pnt - 1, :]) +
+                        np.average(z1[:, 0]) + np.average(z1[:, pnt - 1])) / 4
     else:
-        v_offset = np.min(z1) - np.min(z2)
+        if torch_flag:
+            v_offset = torch.min(z1) - torch.min(z2)
+        else:
+            v_offset = np.min(z1) - np.min(z2)
 
     return v_offset
 
