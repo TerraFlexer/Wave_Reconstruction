@@ -14,7 +14,7 @@ class Params:
     def __init__(self, pnt_cnt, edge):
         self.pnt_cnt = pnt_cnt
         self.edge = edge
-        self.gamma = torch.tensor(torch.randn((pnt_cnt, pnt_cnt)) * 0.5 + 0.25, requires_grad=True)
+        self.gamma = torch.tensor(torch.randn((pnt_cnt, pnt_cnt)) * 0.25 + 0.5, requires_grad=True)
         # self.ss = torch.tensor(torch.randn((pnt_cnt, pnt_cnt)), requires_grad=True)
 
     def __iter__(self):
@@ -31,14 +31,12 @@ class Params:
 
 X, Y = init_net(N, Edge)
 
-u_org = torch.from_numpy(fpckg.add_noise(fpckg.multifocal([1, 3], [0.8, -1.5], X, Y), 0.1, N))
-
 p = Params(N, Edge)
 
 # count_metrics(p.gamma.detach().numpy())
 
-epochs = 400
-batch_size = 5
+epochs = 300
+batch_size = 10
 
 epoch_arr = []
 losses = []
@@ -47,23 +45,24 @@ losses5 = []
 cur_loss = 0
 cur_loss5 = 0
 
-optimizer = torch.optim.Adam(p, lr=0.00005)
+optimizer = torch.optim.Adam(p, lr=0.0002)
 
 criterion = torch.nn.MSELoss()
 
 for i in range(epochs):
     for ind, el in enumerate(np.linspace(0.0, 0.2, num=batch_size)):
-        u_org = torch.from_numpy(fpckg.add_noise(fpckg.multifocal([1, 3], [0.8, -1.5], X, Y), el, N))
+        u_orig = torch.from_numpy(fpckg.multifocal([1, 3], [0.8, -1.5], X, Y))
+        u = fpckg.add_noise(u_orig, el, N)
 
         # zeroing gradients before each iteration
         optimizer.zero_grad()
 
         # making predictions with forward pass
-        pred = p.forward(u_org)
+        pred = p.forward(u)
 
         # calculating the loss between original and predicted data points
-        offs = fpckg.offset(pred, u_org, N, fpckg.spiral_flag, 1)
-        loss = criterion(pred - offs, u_org)
+        offs = fpckg.offset(pred, u_orig, N, fpckg.spiral_flag, 1)
+        loss = criterion(pred - offs, u_orig)
 
         # backward pass for computing the gradients of the loss w.r.t to learnable parameters
         loss.backward()
@@ -76,24 +75,22 @@ for i in range(epochs):
 
         cur_loss += loss.item()
 
-        pred5 = torch.from_numpy(method_v(u_org, N, Edge, 1, 0.5))
-        offs = fpckg.offset(pred5, u_org, N, fpckg.spiral_flag, 1)
-        loss5 = criterion(pred5 - offs, u_org)
+        pred5 = torch.from_numpy(method_v(u, N, Edge, 1, 0.5))
+        offs = fpckg.offset(pred5, u_orig, N, fpckg.spiral_flag, 1)
+        loss5 = criterion(pred5 - offs, u_orig)
 
         cur_loss5 += loss5.item()
 
     # printing the values for understanding
-    if i % 20 == 0 and i != 0:
+    if (i + 1) % 10 == 0:
         epoch_arr.append(i)
 
-        cur_loss /= batch_size * 20
-        cur_loss5 /= batch_size * 20
+        cur_loss /= batch_size * 10
+        cur_loss5 /= batch_size * 10
 
         losses.append(cur_loss)
         losses5.append(cur_loss5)
 
-        pred5 = torch.from_numpy(method_v(u_org, N, Edge, 1, 0.5))
-        loss5 = criterion(pred5, u_org)
         print('{}. \t{} \t{}'.format(i, cur_loss, cur_loss5))
 
         cur_loss = 0
@@ -108,6 +105,6 @@ plt.show()
 
 count_metrics(p.gamma.detach().numpy())
 
-# fpckg.visualaize_param_matrix(res)
+fpckg.visualaize_param_matrix(p.gamma.detach().numpy())
 
 # count_metrics(res)
