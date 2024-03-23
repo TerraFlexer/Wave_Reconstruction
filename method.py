@@ -132,7 +132,7 @@ def method_count(f_kl, pnt_cnt, lambds, mus, gammas, ss, st_stb, torch_flag=0): 
 
     # Вычисляем слагаемое дробного стабилизатора
     if torch_flag:
-        drob_stab = gammas * np.power(np.dot(lambds.reshape(pnt_cnt, -1), lambds.reshape(1, -1)), ss)
+        drob_stab = gammas * torch.pow(torch.from_numpy(np.dot(lambds.reshape(pnt_cnt, -1), lambds.reshape(1, -1))), ss)
         znam = torch.from_numpy(znam)
     else:
         drob_stab = gammas * np.power(np.dot(lambds.reshape(pnt_cnt, -1), lambds.reshape(1, -1)), ss)
