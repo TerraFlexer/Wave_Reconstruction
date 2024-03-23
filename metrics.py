@@ -10,7 +10,7 @@ from scipy.special import kl_div
 N = fpckg.N
 
 
-def count_metrics(gammas):
+def count_metrics(gammas, ss):
     arr_perc = np.zeros(40)
     arr_mse = np.zeros(40)
     arr_ssim = np.zeros(40)
@@ -55,7 +55,7 @@ def count_metrics(gammas):
             u_res = method_v(z, N, np.pi, 0)
             u_res_stb_5 = method_v(z, N, np.pi, 1, 0.5)
             u_res_stb_75 = method_v(z, N, np.pi, 1, 0.75)
-            u_res_stb_g = method_v(z, N, np.pi, 1, gammas)
+            u_res_stb_g = method_v(z, N, np.pi, 1, gammas, ss)
 
             z_approx = u_res.real
             z_approx_stb_5 = u_res_stb_5.real
