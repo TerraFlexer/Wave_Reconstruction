@@ -6,7 +6,6 @@ from scipy.special import kl_div
 import matplotlib.pyplot as plt
 import torch
 
-
 N = 64
 Edge = np.pi
 spiral_flag = 0
@@ -181,7 +180,6 @@ def perform_trial(gammas, cnt_noise=5, cnt_in_noise=5, visual_flag=0, name='No n
         z = generate_random_multifocal(X, Y)
 
         for i in range(cnt_in_noise):
-
             z1 = add_noise(z, el, N)
 
             z_approx = method_v(z1, N, Edge, 1, gammas)
@@ -191,8 +189,8 @@ def perform_trial(gammas, cnt_noise=5, cnt_in_noise=5, visual_flag=0, name='No n
             accuracy_tmp += mse(z, z_approx - offs)
 
             ssim_accuracy_tmp += (1 - ssim(z, z_approx - offs,
-                                       data_range=max(np.max(z), np.max(z_approx - offs)) -
-                                                  min(np.min(z), np.min(z_approx - offs)))) / 2
+                                           data_range=max(np.max(z), np.max(z_approx - offs)) -
+                                                      min(np.min(z), np.min(z_approx - offs)))) / 2
 
             kl_divergence_tmp += np.sum(kl_div(z + 5, z_approx - offs + 5))
 
@@ -263,3 +261,4 @@ def save_param_value_in_file(param_name, param_value, file_name):
     file_name += "_" + param_name + ".npy"
     with open(file_name, 'wb') as f:
         np.save(f, param_value)
+        print("Saved " + param_name + " in " + file_name)
