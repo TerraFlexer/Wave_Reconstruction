@@ -9,3 +9,4 @@ __pycache__/main.cpython-39.pyc
 __pycache__/method.cpython-39.pyc
 __pycache__/splines.cpython-39.pyc
 *.pyc
+*.npy
