@@ -257,3 +257,9 @@ def prepare_for_visual(X1, Y1, Z1):
                 Z2[i][j] = np.nan
 
     return Z2
+
+
+def save_param_value_in_file(param_name, param_value, file_name):
+    file_name += "_" + param_name + ".npy"
+    with open(file_name, 'wb') as f:
+        np.save(f, param_value)
