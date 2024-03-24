@@ -262,3 +262,8 @@ def save_param_value_in_file(param_name, param_value, file_name):
     with open(file_name, 'wb') as f:
         np.save(f, param_value)
         print("Saved " + param_name + " in " + file_name)
+
+
+def load_param_value_from_file(file_name):
+    with open(file_name, 'rb') as f:
+        return np.load(f)
