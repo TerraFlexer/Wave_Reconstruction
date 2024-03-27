@@ -265,5 +265,7 @@ def save_param_value_in_file(param_name, param_value, file_name):
 
 
 def load_param_value_from_file(file_name):
-    with open(file_name, 'rb') as f:
-        return np.load(f)
+    with open(file_name + ".npy", 'rb') as f:
+        param_value = np.load(f)
+        print("Loaded params from " + file_name + ".npy")
+        return param_value
