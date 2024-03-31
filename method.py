@@ -2,7 +2,6 @@ import numpy as np
 import torch
 from scipy.fft import fft2, ifft2, fftshift, ifftshift
 from splines import spline_coefficients
-from splines import spline_approximation
 
 
 def init_net(pnt_cnt, edge):
