@@ -29,9 +29,6 @@ X, Y = init_net(N, Edge)
 
 p = Params(N, Edge)
 
-fpckg.save_param_value_in_file("gamma", p.gamma.detach().numpy(), "gradient")
-fpckg.save_param_value_in_file("ss", p.ss.detach().numpy(), "gradient")
-
 epochs = 300
 batch_size = 10
 
@@ -42,13 +39,17 @@ losses5 = []
 cur_loss = 0
 cur_loss5 = 0
 
-optimizer = torch.optim.Adam(p, lr=0.0002)
+# lr_for_mf = 0.0002
+
+optimizer = torch.optim.Adam(p, lr=0.002)
 
 criterion = torch.nn.MSELoss()
 
 for i in range(epochs):
     for ind, el in enumerate(np.linspace(0.0, 0.2, num=batch_size)):
-        u_orig = torch.from_numpy(fpckg.generate_random_multifocal(X, Y))
+        # u_orig = torch.from_numpy(fpckg.generate_random_multifocal(X, Y))
+        # u_orig = torch.from_numpy(fpckg.generate_random_multifocal_razr(X, Y))
+        u_orig = torch.from_numpy(fpckg.spiral(3, 1, X, Y))
         u = fpckg.add_noise(u_orig, el, N)
 
         # zeroing gradients before each iteration
@@ -98,6 +99,7 @@ plt.plot(epoch_arr, losses, label='Loss gamma+ss')
 plt.plot(epoch_arr, losses5, label='Loss 0.5')
 plt.ylabel("MSE")
 plt.xlabel("Epoch")
+plt.title("Loss gamma+ss spiral")
 plt.legend()
 plt.show()
 
@@ -107,5 +109,5 @@ fpckg.visualaize_param_matrix(p.gamma.detach().numpy(), 'gamma')
 
 fpckg.visualaize_param_matrix(p.ss.detach().numpy(), 'ss')
 
-fpckg.save_param_value_in_file("gamma", p.gamma.detach().numpy(), "gradient")
-fpckg.save_param_value_in_file("ss", p.ss.detach().numpy(), "gradient")
+fpckg.save_param_value_in_file("gamma_spiral", p.gamma.detach().numpy(), "gradient")
+fpckg.save_param_value_in_file("ss_spiral", p.ss.detach().numpy(), "gradient")
