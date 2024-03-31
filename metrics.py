@@ -4,13 +4,11 @@ from skimage.metrics import structural_similarity as ssim
 from skimage.metrics import mean_squared_error as mse
 import functions_package as fpckg
 from method import method_v, fill_gammas
-from splines import spline_approximation
-from scipy.special import kl_div
 
 N = fpckg.N
 
 
-def count_metrics(gammas, ss):
+def count_metrics(gammas, ss=0.5):
     arr_perc = np.zeros(40)
     arr_mse = np.zeros(40)
     arr_ssim = np.zeros(40)
@@ -46,7 +44,8 @@ def count_metrics(gammas, ss):
         if fpckg.spiral_flag:
             z_src = fpckg.spiral(3, 1, X, Y)
         else:
-            z_src = fpckg.multifocal([1, 3], [0.8, -1.5], X, Y)
+            # z_src = fpckg.multifocal([1, 3], [0.8, -1.5], X, Y)
+            z_src = fpckg.multifocal_razr([np.sqrt(3), 3], [0.8, -1.5], [0, 1, 3], X, Y)
 
         for i in range(5):
             # Добавляем шум к исходному фронту
