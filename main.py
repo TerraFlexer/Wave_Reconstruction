@@ -11,8 +11,6 @@ x = np.linspace(-Edge, Edge, N, endpoint=False)
 y = np.linspace(-Edge, Edge, N, endpoint=False)
 Y, X = np.meshgrid(x, y)
 
-
-# z = fpckg.multifocal([1, 3, 12], [0.8, -1.5, -11], X, Y)
 z = fpckg.multifocal([1, 3], [0.8, -1.5], X, Y)
 # z = multifocal_razr([np.sqrt(3), 3], [0.8, -1.5], [0, 1, 3])
 # z = fpckg.spiral(3, 1, X, Y)
