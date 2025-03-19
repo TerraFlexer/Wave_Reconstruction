@@ -185,3 +185,26 @@ def method_v(z, pnt_cnt, edge, st_stb, gamma=0.5, s=0.5, torch_flag=0):  # Об�
     # z_approx = spline_approximation(u_res.real, X, Y, pnt_cnt)
 
     return u_res.real
+
+
+def method_v_slopes(dx, dy, pnt_cnt, edge, st_stb, gamma=0.75, s=0.5, torch_flag=0):  # Общая обертка метода при вызове для наклонов
+    # Инициализируем сетку
+    Y, X = init_net(pnt_cnt, edge)
+
+    # Вычисляем матрицы производных по направлению функции и раскладываем их по базису сплайнов
+    matrix_g1 = spline_coefficients(dx, pnt_cnt, X, Y)
+    matrix_g2 = spline_coefficients(dy, pnt_cnt, X, Y)
+
+    # Вычисляем необходимые для работы метода матрицы
+    lambds, mus, gammas, ss, B1, B2, G1, G2 = prepare_data(pnt_cnt, gamma, s, torch_flag)
+
+    # Вычисляем правую часть уравнения
+    f_kl = affect_rows(B2, np.dot(G1, matrix_g1)) + np.dot(B1, affect_rows(G2, matrix_g2))
+
+    # Запускаем вычисление самого метода
+    u_res = method_count(f_kl, pnt_cnt, lambds, mus, gammas, ss, st_stb, torch_flag)
+
+    # Раскладываем Real часть полученной функции и раскладываем ее по базису сплайнов
+    # z_approx = spline_approximation(u_res.real, X, Y, pnt_cnt)
+
+    return u_res.real
