@@ -169,8 +169,10 @@ def method_v(z, pnt_cnt, edge, st_stb, gamma=0.5, s=0.5, torch_flag=0):  # Об�
     dy = fy(z, pnt_cnt, edge)
 
     # Вычисляем матрицы производных по направлению функции и раскладываем их по базису сплайнов
-    matrix_g1 = spline_coefficients(dx, pnt_cnt, X, Y)
-    matrix_g2 = spline_coefficients(dy, pnt_cnt, X, Y)
+    '''matrix_g1 = spline_coefficients(dx, pnt_cnt, X, Y)
+    matrix_g2 = spline_coefficients(dy, pnt_cnt, X, Y)'''
+    matrix_g1 = dx
+    matrix_g2 = dy
 
     # Вычисляем необходимые для работы метода матрицы
     lambds, mus, gammas, ss, B1, B2, G1, G2 = prepare_data(pnt_cnt, gamma, s, torch_flag)
