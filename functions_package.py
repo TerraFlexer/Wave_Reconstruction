@@ -269,3 +269,34 @@ def load_param_value_from_file(file_name):
         param_value = np.load(f)
         print("Loaded params from " + file_name + ".npy")
         return param_value
+
+
+def principal_value(x):
+    # Приводим значение x в интервал [-pi, pi]
+    while x > np.pi:
+        x -= 2 * np.pi
+    while x <= -np.pi:
+        x += 2 * np.pi
+    return x
+
+
+def count_branch_sum(dx, dy, N, h, d1 = 20, d2 = 20, d3 = 20, d4 = 20):
+
+    sum = 0
+
+    # Движение вправо
+    for j in range(d1, N - d3):
+        sum += principal_value(dx[d2][j]) * h
+
+    # Движение вниз
+    for i in range(d2, N - d4):
+        sum += principal_value(dy[i][N - d3 - 1]) * h
+
+    # Движение влево
+    for j in range(N - d3 - 1, d1, -1):
+        sum += -principal_value(dx[N - d4 - 1][j - 1]) * h
+
+    # Движение вверх
+    for i in range(N - d4 - 1, d2, -1):
+        sum += -principal_value(dy[i - 1][d1]) * h
+    return sum
