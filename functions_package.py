@@ -156,6 +156,17 @@ def generate_random_multifocal_razr(X, Y):
     return multifocal_razr(rs[::-1], zs[::-1], r2s[::-1], X, Y)
 
 
+def vortex(X, Y, x0, y0, m):
+    m = 3  # топологический заряд
+
+    R = np.sqrt((X - x0)**2 + (Y - y0)**2)
+    Theta = np.arctan2(Y - y0, X - x0)
+    amplitude = R**abs(m) * np.exp(-R**2)
+    field = amplitude * np.exp(1j * m * Theta)
+    
+    return amplitude, np.angle(field)
+
+
 def perform_trial(gammas, cnt_noise=5, cnt_in_noise=5, visual_flag=0, name='No name'):
     accuracy = 0
     ssim_accuracy = 0
