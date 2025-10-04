@@ -43,6 +43,54 @@ def multifocal_razr(Rs, Zs, R2s, X, Y):
     return Z
 
 
+def multifocal_tilted(Rs, Zs, X, Y, alphas=None):
+    n = len(Rs)
+    N = X.shape[0]
+    Z = np.zeros((N, N))
+
+    if alphas is None:
+        alphas = [(0.0, 0.0)] * n
+
+    for k in range(n):
+        R = Rs[k]
+        zz = Zs[k]
+        ax, ay = alphas[k]
+        for i in range(N):
+            for j in range(N):
+                if R * R - X[i][j] ** 2 - Y[i][j] ** 2 > 0:
+                    val = np.sqrt(R * R - X[i][j] ** 2 - Y[i][j] ** 2) + zz + ax * X[i][j] + ay * Y[i][j]
+                    if Z[i][j] < val:
+                        Z[i][j] = val
+    return Z
+
+
+def generate_random_multifocal_tilted(X, Y):
+    n = np.random.randint(2, 6)
+    hr = 3
+    rs = np.zeros(n)
+    zs = np.zeros(n)
+    alphas = []
+
+    for i in range(n):
+        if i == 0:
+            rs[i] = np.random.uniform(2, hr)
+        else:
+            rs[i] = np.random.uniform(0.7, hr)
+
+        hr = rs[i]
+        if i == 0:
+            zs[i] = np.random.uniform(-rs[i], 0)
+        else:
+            rz = np.sqrt(rs[i - 1] ** 2 - rs[i] ** 2) + zs[i - 1]
+            zs[i] = np.random.uniform(rs[i - 1] + zs[i - 1] - rs[i], rz)
+
+        ax = np.random.uniform(-0.2, 0.2)  # наклон по X
+        ay = np.random.uniform(-0.2, 0.2)  # наклон по Y
+        alphas.append((ax, ay))
+
+    return multifocal_tilted(rs, zs, X, Y, alphas)
+
+
 def to_polar_teta(x, y):
     if x > 0 and y >= 0:
         return np.arctan(y / x)
