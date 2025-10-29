@@ -1,5 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import functions_package as fpckg
+
+N = fpckg.N
+Edge = fpckg.Edge
 
 EPS = 0.5
 
