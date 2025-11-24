@@ -63,6 +63,62 @@ def multifocal_tilted(Rs, Zs, X, Y, alphas=None):
                         Z[i][j] = val
     return Z
 
+def multifocal_with_anomalies(Rs, Zs, X, Y, dx=0, dy=0, dz=0, tilt_x=0, tilt_y=0, coma_x=0, coma_y=0, 
+               cylinder_radius=0, cylinder_angle=0, cylinder_height=0):
+    """
+    Rs, Zs — радиусы и смещения сегментов
+    X, Y — координатные сетки
+    dx, dy, dz — смещение линзы
+    tilt_x, tilt_y — наклоны (в радианах)
+    coma_x, coma_y — коэффициенты комы по x и y
+    cylinder_radius — радиус цилиндра
+    cylinder_angle — угол поворота цилиндра (в радианах)
+    cylinder_height — высота цилиндрической грани
+    """
+    EPS = 1e-2
+    N = X.shape[0]
+    Z = np.zeros((N, N))
+    
+    # Применяем смещение координат
+    Xp = X - dx
+    Yp = Y - dy
+    
+    # Вычисляем профиль многослойной линзы
+    for R, zz in zip(Rs, Zs):
+        mask = R**2 - Xp**2 - Yp**2 > 0
+        Z_candidate = np.sqrt(np.clip(R**2 - Xp**2 - Yp**2, 0, None)) + zz + dz
+        Z[mask] = np.maximum(Z[mask], Z_candidate[mask])
+    
+    # Создаем маску ненулевых точек (где есть волновой фронт)
+    wavefront_mask = Z > EPS
+    
+    # Добавляем наклон ТОЛЬКО к волновому фронту
+    Z_tilt = X * np.tan(tilt_x) + Y * np.tan(tilt_y)
+    Z += Z_tilt
+    
+    # Добавляем цилиндрическую грань
+    if cylinder_radius > 0 and cylinder_height > 0:
+        # Поворачиваем координаты на угол цилиндра
+        X_rot = X * np.cos(cylinder_angle) + Y * np.sin(cylinder_angle)
+        Y_rot = -X * np.sin(cylinder_angle) + Y * np.cos(cylinder_angle)
+        
+        # Создаем цилиндрическую грань (боковая поверхность цилиндра)
+        # Грань поднимается там, где X_rot приближается к cylinder_radius
+        cylinder_mask = np.abs(X_rot) <= cylinder_radius
+        cylinder_profile = cylinder_height * (1 - np.abs(X_rot) / cylinder_radius)
+        
+        # Добавляем цилиндрическую грань ко всему волновому фронту
+        Z[wavefront_mask] += cylinder_profile[wavefront_mask] * cylinder_mask[wavefront_mask]
+    
+    # Добавляем кому (асимметричное искажение)
+    rho = np.sqrt(X**2 + Y**2)
+    theta = np.arctan2(Y, X)
+    W_coma = (3 * rho**3 - 2 * rho) * (coma_x * np.cos(theta) + coma_y * np.sin(theta))
+    
+    # Применяем кому ТОЛЬКО к волновому фронту
+    Z[wavefront_mask] += W_coma[wavefront_mask]
+    
+    return Z
 
 def generate_random_multifocal_tilted(X, Y):
     n = np.random.randint(2, 6)
@@ -89,6 +145,17 @@ def generate_random_multifocal_tilted(X, Y):
         alphas.append((ax, ay))
 
     return multifocal_tilted(rs, zs, X, Y, alphas)
+
+
+def generate_random_multifocal_anomaly(X, Y, offs=0, tilt=0, coma=0, cylinder=0):
+    dx = np.random.uniform(-1.5, 1.5) * offs
+    dy = np.random.uniform(-1.5, 1.5) * offs
+    
+    #TODO случайная генерация Rs и Zs
+    Rs = [1, 3]
+    Zs = [0.8, -1.5]
+    
+    return multifocal_with_anomalies(Rs, Zs, X, Y, dx, dy)
 
 
 def to_polar_teta(x, y):
