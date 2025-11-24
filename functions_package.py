@@ -151,8 +151,8 @@ def generate_random_multifocal_anomaly(X, Y, offs=0, tilt=0, coma=0, cylinder=0)
     dx = np.random.uniform(-1.5, 1.5) * offs
     dy = np.random.uniform(-1.5, 1.5) * offs
     
-    coma_x = np.random.uniform(-0.03, 0.03) * coma
-    coma_y = np.random.uniform(-0.03, 0.03) * coma
+    coma_x = np.random.uniform(-0.04, 0.04) * coma
+    coma_y = np.random.uniform(-0.04, 0.04) * coma
     
     #TODO случайная генерация Rs и Zs
     Rs = [1, 3]
