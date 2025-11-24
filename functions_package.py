@@ -63,7 +63,7 @@ def multifocal_tilted(Rs, Zs, X, Y, alphas=None):
                         Z[i][j] = val
     return Z
 
-def multifocal_with_anomalies(Rs, Zs, X, Y, dx=0, dy=0, dz=0, tilt_x=0, tilt_y=0, coma_x=0, coma_y=0, 
+def multifocal_with_anomalies(Rs, Zs, X, Y, dx=0, dy=0, tilt_x=0, tilt_y=0, coma_x=0, coma_y=0, 
                cylinder_radius=0, cylinder_angle=0, cylinder_height=0):
     """
     Rs, Zs — радиусы и смещения сегментов
@@ -86,7 +86,7 @@ def multifocal_with_anomalies(Rs, Zs, X, Y, dx=0, dy=0, dz=0, tilt_x=0, tilt_y=0
     # Вычисляем профиль многослойной линзы
     for R, zz in zip(Rs, Zs):
         mask = R**2 - Xp**2 - Yp**2 > 0
-        Z_candidate = np.sqrt(np.clip(R**2 - Xp**2 - Yp**2, 0, None)) + zz + dz
+        Z_candidate = np.sqrt(np.clip(R**2 - Xp**2 - Yp**2, 0, None)) + zz
         Z[mask] = np.maximum(Z[mask], Z_candidate[mask])
     
     # Создаем маску ненулевых точек (где есть волновой фронт)
@@ -151,11 +151,14 @@ def generate_random_multifocal_anomaly(X, Y, offs=0, tilt=0, coma=0, cylinder=0)
     dx = np.random.uniform(-1.5, 1.5) * offs
     dy = np.random.uniform(-1.5, 1.5) * offs
     
+    coma_x = np.random.uniform(-0.03, 0.03) * coma
+    coma_y = np.random.uniform(-0.03, 0.03) * coma
+    
     #TODO случайная генерация Rs и Zs
     Rs = [1, 3]
     Zs = [0.8, -1.5]
     
-    return multifocal_with_anomalies(Rs, Zs, X, Y, dx, dy)
+    return multifocal_with_anomalies(Rs, Zs, X, Y, dx, dy, 0, 0, coma_x, coma_y)
 
 
 def to_polar_teta(x, y):
