@@ -26,7 +26,7 @@ def count_metrics(gammas, ss=0.5):
 
     # gammas = fill_gammas([gamma_center, gamma_middle1, gamma_middle2], [8, 15, 25], gamma_side, N)
 
-    for ind, el in enumerate(np.linspace(0.0, 0.2, num=40)):
+    for ind, el in enumerate(np.linspace(0.0, 0.3, num=40)):
         mse_avg = 0
         mse_avg_stb_5 = 0
         mse_avg_stb_75 = 0
@@ -45,7 +45,8 @@ def count_metrics(gammas, ss=0.5):
             z_src = fpckg.spiral(3, 1, X, Y)
         else:
             # z_src = fpckg.multifocal([1, 3], [0.8, -1.5], X, Y)
-            z_src = fpckg.multifocal_razr([np.sqrt(3), 3], [0.8, -1.5], [0, 1, 3], X, Y)
+            # z_src = fpckg.multifocal_razr([np.sqrt(3), 3], [0.8, -1.5], [0, 1, 3], X, Y)
+            z_src = fpckg.multifocal_with_anomalies([1, 3], [0.8, -1.5], X, Y, 0, 0, 0, 0, 0.02)
 
         for i in range(5):
             # Добавляем шум к исходному фронту
