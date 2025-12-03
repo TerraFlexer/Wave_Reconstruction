@@ -29,7 +29,7 @@ X, Y = init_net(N, Edge)
 
 p = Params(N, Edge)
 
-epochs = 300
+epochs = 500
 batch_size = 10
 
 epoch_arr = []
@@ -49,7 +49,8 @@ for i in range(epochs):
     for ind, el in enumerate(np.linspace(0.0, 0.2, num=batch_size)):
         # u_orig = torch.from_numpy(fpckg.generate_random_multifocal(X, Y))
         # u_orig = torch.from_numpy(fpckg.generate_random_multifocal_razr(X, Y))
-        u_orig = torch.from_numpy(fpckg.spiral(3, 1, X, Y))
+        #u_orig = torch.from_numpy(fpckg.spiral(3, 1, X, Y))
+        u_orig = torch.from_numpy(fpckg.generate_random_multifocal_anomaly(X, Y, 0, 0, 1))
         u = fpckg.add_noise(u_orig, el, N)
 
         # zeroing gradients before each iteration
@@ -81,7 +82,7 @@ for i in range(epochs):
         cur_loss5 += loss5.item()
 
     # printing the values for understanding
-    if (i + 1) % 10 == 0:
+    if i % 20 == 0:
         epoch_arr.append(i)
 
         cur_loss /= batch_size * 10
@@ -109,5 +110,5 @@ fpckg.visualaize_param_matrix(p.gamma.detach().numpy(), 'gamma')
 
 fpckg.visualaize_param_matrix(p.ss.detach().numpy(), 'ss')
 
-fpckg.save_param_value_in_file("gamma_spiral", p.gamma.detach().numpy(), "gradient")
-fpckg.save_param_value_in_file("ss_spiral", p.ss.detach().numpy(), "gradient")
+fpckg.save_param_value_in_file("gamma_anomaly_coma", p.gamma.detach().numpy(), "gradient")
+fpckg.save_param_value_in_file("ss_gamma_anomaly_coma", p.ss.detach().numpy(), "gradient")
