@@ -6,7 +6,7 @@ from scipy.special import kl_div
 import matplotlib.pyplot as plt
 import torch
 
-N = 64
+N = 128
 Edge = np.pi
 spiral_flag = 0
 
@@ -154,9 +154,29 @@ def generate_random_multifocal_anomaly(X, Y, offs=0, tilt=0, coma=0, cylinder=0)
     coma_x = np.random.uniform(-0.04, 0.04) * coma
     coma_y = np.random.uniform(-0.04, 0.04) * coma
     
-    #TODO случайная генерация Rs и Zs
-    Rs = [1, 3]
-    Zs = [0.8, -1.5]
+    n = np.random.randint(2, 6)
+
+    hr = 3
+
+    rs = np.zeros(n)
+    zs = np.zeros(n)
+
+    for i in range(n):
+        if i == 0:
+            rs[i] = np.random.uniform(2, hr)
+        else:
+            rs[i] = np.random.uniform(0.7, hr)
+
+        hr = rs[i]
+        if i == 0:
+            zs[i] = np.random.uniform(-rs[i], 0)
+        else:
+            rz = np.sqrt(rs[i - 1] ** 2 - rs[i] ** 2) + zs[i - 1]
+            # print("z: ", zs[i], "left: ", rs[i - 1] + zs[i - 1] - rs[i], "right: ", rz)
+            zs[i] = np.random.uniform(rs[i - 1] + zs[i - 1] - rs[i], rz)
+            # print("z: ", zs[i], "left: ", rs[i - 1] + zs[i - 1] - rs[i], "right: ", rz)
+    Rs = rs[::-1]
+    Zs = zs[::-1]
     
     return multifocal_with_anomalies(Rs, Zs, X, Y, dx, dy, 0, 0, coma_x, coma_y)
 
