@@ -6,7 +6,7 @@ from scipy.special import kl_div
 import matplotlib.pyplot as plt
 import torch
 
-N = 128
+N = 256
 Edge = np.pi
 spiral_flag = 0
 
@@ -154,6 +154,10 @@ def generate_random_multifocal_anomaly(X, Y, offs=0, tilt=0, coma=0, cylinder=0)
     coma_x = np.random.uniform(-0.04, 0.04) * coma
     coma_y = np.random.uniform(-0.04, 0.04) * coma
     
+    cyl_r = np.random.uniform(2, 50) * cylinder
+    cyl_a = np.random.uniform(0, np.pi) * cylinder
+    cyl_h = np.random.uniform(0, cyl_r / 3) * cylinder
+    
     n = np.random.randint(2, 6)
 
     hr = 3
@@ -178,7 +182,7 @@ def generate_random_multifocal_anomaly(X, Y, offs=0, tilt=0, coma=0, cylinder=0)
     Rs = rs[::-1]
     Zs = zs[::-1]
     
-    return multifocal_with_anomalies(Rs, Zs, X, Y, dx, dy, 0, 0, coma_x, coma_y)
+    return multifocal_with_anomalies(Rs, Zs, X, Y, dx, dy, 0, 0, coma_x, coma_y, cyl_r, cyl_a, cyl_h)
 
 
 def to_polar_teta(x, y):
@@ -375,9 +379,9 @@ def perform_trial(gammas, cnt_noise=5, cnt_in_noise=5, visual_flag=0, name='No n
     return (kl_divergence + accuracy + ssim_accuracy) / (cnt_noise * cnt_in_noise)
 
 
-def visualaize_param_matrix(param, name='param'):
-    x = np.linspace(0, N - 1, N, endpoint=False)
-    y = np.linspace(0, N - 1, N, endpoint=False)
+def visualaize_param_matrix(param, name='param', size=N):
+    x = np.linspace(0, size - 1, size, endpoint=False)
+    y = np.linspace(0, size - 1, size, endpoint=False)
     Y, X = np.meshgrid(x, y)
 
     fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
@@ -449,3 +453,101 @@ def count_branch_sum(dx, dy, N, h, d1 = 20, d2 = 20, d3 = 20, d4 = 20):
     for i in range(N - d4 - 1, d2, -1):
         sum += -principal_value(dy[i - 1][d1]) * h
     return sum
+
+def axial_optical_power(Z, dx=1.0, dy=1.0):
+    """
+    Вычисляет осевую оптическую силу Φ_a из матрицы волнового фронта Z.
+
+    Parameters:
+    -----------
+    Z : 2D numpy array
+        волновой фронт
+    dx, dy : float
+        шаг сетки по x и y
+
+    Returns:
+    --------
+    Phi : 2D numpy array
+        осевая оптическая сила
+    """
+
+    ny, nx = Z.shape
+
+    # координаты (центр в середине массива)
+    x = (np.arange(nx) - nx // 2) * dx
+    y = (np.arange(ny) - ny // 2) * dy
+    X, Y = np.meshgrid(x, y)
+
+    # радиус
+    R = np.sqrt(X**2 + Y**2)
+
+    # градиенты
+    dz_dy, dz_dx = np.gradient(Z, dy, dx)
+
+    # защита от деления на 0
+    R_safe = np.where(R == 0, 1e-12, R)
+
+    # радиальная производная
+    dz_dr = (dz_dx * X + dz_dy * Y) / R_safe
+
+    # формула Φ_a
+    Phi = (1 / R_safe) * (dz_dr / np.sqrt(1 + dz_dr**2))
+
+    # центр (r=0) — аккуратно
+    Phi[R == 0] = 0.0
+
+    return Phi
+
+def instantaneous_optical_power(Z, dx=1.0, dy=1.0):
+    """
+    Мгновенная оптическая сила Φ_I
+
+    Parameters:
+    -----------
+    Z : 2D numpy array
+        волновой фронт
+    dx, dy : float
+        шаг сетки
+
+    Returns:
+    --------
+    Phi : 2D numpy array
+    """
+
+    ny, nx = Z.shape
+
+    # координаты (центр = ось)
+    x = (np.arange(nx) - nx // 2) * dx
+    y = (np.arange(ny) - ny // 2) * dy
+    X, Y = np.meshgrid(x, y)
+
+    R = np.sqrt(X**2 + Y**2)
+    R_safe = np.where(R == 0, 1e-12, R)
+
+    # первые производные
+    dz_dy, dz_dx = np.gradient(Z, dy, dx)
+
+    # вторые производные
+    d2z_dy2, d2z_dxdy = np.gradient(dz_dy, dy, dx)
+    d2z_dxdy2, d2z_dx2 = np.gradient(dz_dx, dy, dx)
+
+    # симметризуем смешанную производную
+    d2z_dxdy = 0.5 * (d2z_dxdy + d2z_dxdy2)
+
+    # dz/dr
+    dz_dr = (dz_dx * X + dz_dy * Y) / R_safe
+
+    # d2z/dr2
+    d2z_dr2 = (
+        X**2 * d2z_dx2 +
+        2 * X * Y * d2z_dxdy +
+        Y**2 * d2z_dy2
+    ) / (R_safe**2)
+
+    # формула
+    Phi = d2z_dr2 / (1 + dz_dr**2)**(3/2)
+
+    # центр
+    Phi[R == 0] = 0.0
+
+    return Phi
