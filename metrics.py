@@ -46,9 +46,11 @@ def count_metrics(gammas, ss=0.5):
         else:
             # z_src = fpckg.multifocal([1, 3], [0.8, -1.5], X, Y)
             # z_src = fpckg.multifocal_razr([np.sqrt(3), 3], [0.8, -1.5], [0, 1, 3], X, Y)
-            z_src = fpckg.multifocal_with_anomalies([1, 3], [0.8, -1.5], X, Y, 0, 0, 0, 0, 0.02)
+            z_src = fpckg.multifocal_with_anomalies([1, 3], [0.8, -1.5], X, Y, 0.7, 0, 0, 0, 1)
+            
+        mean_coeff = 20
 
-        for i in range(5):
+        for i in range(mean_coeff):
             # Добавляем шум к исходному фронту
             z = fpckg.add_noise(z_src, el, N)
 
@@ -87,18 +89,18 @@ def count_metrics(gammas, ss=0.5):
 
         arr_perc[ind] = el
 
-        arr_mse[ind] = mse_avg / 5
-        arr_mse_stb_5[ind] = mse_avg_stb_5 / 5
-        arr_mse_stb_75[ind] = mse_avg_stb_75 / 5
-        arr_mse_stb_g[ind] = mse_avg_stb_g / 5
+        arr_mse[ind] = mse_avg / mean_coeff
+        arr_mse_stb_5[ind] = mse_avg_stb_5 / mean_coeff
+        arr_mse_stb_75[ind] = mse_avg_stb_75 / mean_coeff
+        arr_mse_stb_g[ind] = mse_avg_stb_g / mean_coeff
 
-        arr_ssim[ind] = ssim_avg / 5
-        arr_ssim_stb_5[ind] = ssim_avg_stb_5 / 5
-        arr_ssim_stb_75[ind] = ssim_avg_stb_75 / 5
-        arr_ssim_stb_g[ind] = ssim_avg_stb_g / 5
+        arr_ssim[ind] = ssim_avg / mean_coeff
+        arr_ssim_stb_5[ind] = ssim_avg_stb_5 / mean_coeff
+        arr_ssim_stb_75[ind] = ssim_avg_stb_75 / mean_coeff
+        arr_ssim_stb_g[ind] = ssim_avg_stb_g / mean_coeff
 
-        print("Epoch: ", ind, " mse_avg = ", mse_avg / 5, " mse_avg_stb_5 = ", mse_avg_stb_5 / 5)
-        print("ssim_avg = ", ssim_avg / 5, " ssim_avg_stb_5 = ", ssim_avg_stb_5 / 5, "\n")
+        print("Epoch: ", ind, " mse_avg = ", mse_avg / mean_coeff, " mse_avg_stb_5 = ", mse_avg_stb_5 / mean_coeff)
+        print("ssim_avg = ", ssim_avg / mean_coeff, " ssim_avg_stb_5 = ", ssim_avg_stb_5 / mean_coeff, "\n")
 
     plt.plot(arr_perc, arr_mse, label='Без стабилизатора')
     plt.plot(arr_perc, arr_mse_stb_5, label='Со стабилизатором 0.5')
